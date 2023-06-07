@@ -12,7 +12,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let file_api = File::open("account_details/OKCOIN_API_KEY")?;
     let file_secret_api = File::open("account_details/OKCOIN_API_SECRET")?;
     let file_y_acc = File::open("account_details/YOUR_ACCOUNT_ADDRESS")?;
-    // let file_r_addr_1 = File::open("account_details/RECIPIENT_ADDRESS_1")?;
     
     let reader = BufReader::new(file_api);
     let mut api_key = "".to_string();
@@ -31,12 +30,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     for line in reader.lines() {
         your_acc = line?;
     }
-
-    // let reader = BufReader::new(file_r_addr_1);
-    // let mut recipient = "".to_string();
-    // for line in reader.lines() {
-    //     recipient = line?;
-    // }
 
     let client = Client::new();
     let url = format!(

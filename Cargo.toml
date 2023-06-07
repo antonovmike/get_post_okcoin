@@ -15,7 +15,3 @@ path = "get_balance/main.rs"
 [[bin]]
 name = "withdrawal_of_tokens"
 path = "withdrawal_of_tokens/main.rs"
-
-[[bin]]
-name = "acc_test"
-path = "acc_test/main.rs"
