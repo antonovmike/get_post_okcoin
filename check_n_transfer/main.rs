@@ -1,12 +1,22 @@
 use reqwest::Client;
-// use serde_json::Value;
 use base64::engine::{Engine, general_purpose};
 use hmac_sha256::HMAC;
 
-// const YOUR_ACCOUNT_ADDRESS: &str = "your_account_address";
-// const RECIPIENT_ADDRESS_1: &str = "recipient_address_1";
-// const RECIPIENT_ADDRESS_2: &str = "recipient_address_2";
 // const AMOUNT: i64 = 1000;
+
+// Maybe: serde_aux -> serde with String to u64
+#[derive(Debug, serde::Deserialize)]
+struct BalanseResponseData {
+    #[serde(rename="totalEq")]
+    total_eq: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct BalanseResponse {
+    // #[serde(deserialize_with = "deserialize_u64()")]
+    code: String,
+    data: Vec<BalanseResponseData>,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -39,20 +49,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let json = response.text().await?;
     println!("{}", &json);
     let balance_response: BalanseResponse = serde_json::from_str(&json)?;
-    // println!("{}", balance_response.total_eq);
-    dbg!(balance_response);
+    // let code_num = balance_response.code.parse::<u8>()?;
+    let total_eq = &balance_response.data[0].total_eq.parse::<u64>()?;
+    println!("total_eq: {total_eq}");
+
+    println!("{balance_response:?}");
 
     Ok(())
-}
-// serde_aux -> serde with String to u64
-#[derive(Debug, serde::Deserialize)]
-struct BalanseResponseData {
-    #[serde(rename="totalEq")]
-    total_eq: String,
-}
-
-#[derive(Debug, serde::Deserialize)]
-struct BalanseResponse {
-    code: String,
-    data: Vec<BalanseResponseData>,
 }
