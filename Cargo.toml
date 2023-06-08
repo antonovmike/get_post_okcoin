@@ -16,10 +16,6 @@ help = "0.0.0"
 serde = { version = "1.0.163", features = ["derive"] }
 
 [[bin]]
-name = "get_balance"
-path = "get_balance/main.rs"
-
-[[bin]]
 name = "withdrawal_of_tokens"
 path = "withdrawal_of_tokens/main.rs"
 
