@@ -27,18 +27,18 @@ async fn personal_data() -> Vec<String> {
 }
 
 pub async fn b_and_w() -> Result<u64, Box<dyn std::error::Error>> {
-    let api_and_pass = personal_data().await;
+    let key_and_pass = personal_data().await;
 
     let client = Client::new();
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
     let message = format!("{timestamp}GET{URL_BALANCE}");
-    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &api_and_pass[1]));
+    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
 
     let request = client
         .get(format!("{URL_BASE}{URL_BALANCE}"))
-        .header("OK-ACCESS-KEY", &api_and_pass[0])
-        .header("OK-ACCESS-PASSPHRASE", &api_and_pass[2])
+        .header("OK-ACCESS-KEY", &key_and_pass[0])
+        .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
         .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
         .header("Content-Type", "application/json")
         .header("OK-ACCESS-SIGN", sign.clone())
@@ -48,28 +48,28 @@ pub async fn b_and_w() -> Result<u64, Box<dyn std::error::Error>> {
 
     let json = response.text().await?;
     let balance_response: BalanseResponse = serde_json::from_str(&json)?;
-    // let code_num = balance_response.code.parse::<u8>()?;
     println!("{balance_response:#?}");
-    let total_eq = balance_response.data[0].current_balance.parse::<u64>()?;
 
-    Ok(total_eq)
+    let current_balance = balance_response.data[0].current_balance.parse::<u64>()?;
+
+    Ok(current_balance)
 }
 
 pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let api_and_pass = personal_data().await;
+    let key_and_pass = personal_data().await;
 
     let client = Client::new();
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
     let message = format!("{timestamp}GET{URL_WITHDRAWAL}");
-    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &api_and_pass[1]));
+    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
 
     dbg!(&sign);
 
     let request = client
         .post(format!("{URL_BASE}{URL_WITHDRAWAL}"))
-        .header("OK-ACCESS-KEY", &api_and_pass[0])
-        .header("OK-ACCESS-PASSPHRASE", &api_and_pass[2])
+        .header("OK-ACCESS-KEY", &key_and_pass[0])
+        .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
         .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
         .header("Content-Type", "application/json")
         .header("OK-ACCESS-SIGN", sign.clone())
