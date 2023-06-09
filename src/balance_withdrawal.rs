@@ -66,14 +66,14 @@ pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<d
 
     dbg!(&sign);
 
-    let url_withdrawal = format!("{URL_WITHDRAWAL}&amount={current_balance}&destination={RECIPIENT_ADDR_1}");
+    let url_withdrawal = format!("{URL_WITHDRAWAL}&amount={current_balance}&destination={address}");
 
     let request = client
         .post(format!("{URL_BASE}{url_withdrawal}"))
         .header("accept", "application/json")
         .header("CONTENT-TYPE", "application/json")
         .header("OK-ACCESS-KEY", &key_and_pass[0])
-        .header("OK-ACCESS-SIGN", sign.clone())
+        .header("OK-ACCESS-SIGN", sign)
         .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
         .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
         // .header("amt", current_balance)
