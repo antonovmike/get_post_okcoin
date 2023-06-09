@@ -66,17 +66,20 @@ pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<d
 
     dbg!(&sign);
 
+    let url_withdrawal = format!("{URL_WITHDRAWAL}&amount={current_balance}&destination={RECIPIENT_ADDR_1}");
+
     let request = client
-        .post(format!("{URL_BASE}{URL_WITHDRAWAL}"))
+        .post(format!("{URL_BASE}{url_withdrawal}"))
+        .header("accept", "application/json")
+        .header("CONTENT-TYPE", "application/json")
         .header("OK-ACCESS-KEY", &key_and_pass[0])
-        .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
-        .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
-        .header("Content-Type", "application/json")
         .header("OK-ACCESS-SIGN", sign.clone())
-        .header("amt", current_balance)
-        .header("dest", 3) // 3: internal, 4: on chain
-        .header("toAddr", address)
-        .header("fee", 0)
+        .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
+        .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
+        // .header("amt", current_balance)
+        // .header("dest", 3) // 3: internal, 4: on chain
+        // .header("toAddr", address)
+        // .header("fee", 0)
         .build()?;
 
     let response = client.execute(request).await?;
