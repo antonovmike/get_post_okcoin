@@ -11,6 +11,7 @@ mod constants;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut account_counter = 2;
+
     loop {
         let current_balance = b_and_w().await?;
 
@@ -21,8 +22,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             } else {
                 withdrawal(current_balance, RECIPIENT_ADDR_2).await?;
                 account_counter = 2
+            }
         }
-    }
+
         thread::sleep(Duration::from_secs(3));
     }
 

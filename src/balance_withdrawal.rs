@@ -7,7 +7,7 @@ use crate::constants::*;
 #[derive(Debug, serde::Deserialize)]
 struct BalanseResponseData {
     #[serde(rename = "totalEq")]
-    total_eq: String,
+    current_balance: String,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -50,7 +50,7 @@ pub async fn b_and_w() -> Result<u64, Box<dyn std::error::Error>> {
     let balance_response: BalanseResponse = serde_json::from_str(&json)?;
     // let code_num = balance_response.code.parse::<u8>()?;
     println!("{balance_response:#?}");
-    let total_eq = balance_response.data[0].total_eq.parse::<u64>()?;
+    let total_eq = balance_response.data[0].current_balance.parse::<u64>()?;
 
     Ok(total_eq)
 }
