@@ -14,7 +14,8 @@ struct BalanseResponseData {
 
 #[derive(Debug, serde::Deserialize)]
 struct BalanseResponse {
-    // code: String,
+    #[allow(unused)]
+    code: String,
     data: Vec<BalanseResponseData>,
 }
 
@@ -29,21 +30,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let client = Client::new();
 
-    let url_1 = "https://www.okcoin.com";
-    let url_2 = "/api/v5/account/balance?ccy=STX";
-    let url_3 = "/api/v5/asset/withdrawal?ccy=STX";
+    let url_base = "https://www.okcoin.com";
+    let url_balance = "/api/v5/account/balance?ccy=STX";
+    let url_withdrawal = "/api/v5/asset/withdrawal?ccy=STX";
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-    let message = format!("{timestamp}GET{url_2}");
+    let message = format!("{timestamp}GET{url_balance}");
     let sign = general_purpose::STANDARD.encode(
         HMAC::mac(message, api_secret.clone())
     );
 
     let mut account_counter = 2;
+
+    #[allow(unused)]
     let mut address_sequence = recipient_address_1;
 
     loop {
-        let request = client.get(format!("{url_1}{url_2}"))
+        let request = client.get(format!("{url_base}{url_balance}"))
             .header("OK-ACCESS-KEY", api_key.clone())
             .header("OK-ACCESS-PASSPHRASE", passphrase.clone())
             .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
@@ -69,12 +72,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
 
             let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-            let message = format!("{timestamp}GET{url_3}");
+            let message = format!("{timestamp}GET{url_withdrawal}");
             let sign = general_purpose::STANDARD.encode(
                 HMAC::mac(message, api_secret.clone())
             );
             dbg!(&sign);
-            let request = client.post(format!("{url_1}{url_3}"))
+            let request = client.post(format!("{url_base}{url_withdrawal}"))
                 .header("OK-ACCESS-KEY", api_key.clone())
                 .header("OK-ACCESS-PASSPHRASE", passphrase.clone())
                 .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
@@ -94,6 +97,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         thread::sleep(Duration::from_secs(3));
     }
+
+    #[allow(unused)]
     Ok(())
 }
 
