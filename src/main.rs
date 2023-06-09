@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let passphrase = dotenv::var("OKCOIN_PASS_PHRASE").expect("OKCOIN_PASS_PHRASE not found");
 
     let recipient_address_1 = "RECIPIENT_ADDRESS_1";
-    // let recipient_address_2 = "RECIPIENT_ADDRESS_2";
+    let recipient_address_2 = "RECIPIENT_ADDRESS_2";
 
     let client = Client::new();
 
@@ -38,6 +38,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let sign = general_purpose::STANDARD.encode(
         HMAC::mac(message, api_secret.clone())
     );
+
+    let mut account_counter = 2;
+    let mut address_sequence = recipient_address_1;
 
     loop {
         let request = client.get(format!("{url_1}{url_2}"))
@@ -55,8 +58,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // let code_num = balance_response.code.parse::<u8>()?;
         println!("{balance_response:#?}");
         let total_eq = balance_response.data[0].total_eq.parse::<u64>()?;
-        
+
         if total_eq >= AMOUNT {
+            if account_counter == 2 {
+                address_sequence = recipient_address_1;
+                account_counter = 1
+            } else {
+                address_sequence = recipient_address_2;
+                account_counter = 2
+            }
+
             let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
             let message = format!("{timestamp}GET{url_3}");
             let sign = general_purpose::STANDARD.encode(
@@ -71,7 +82,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .header("OK-ACCESS-SIGN", sign.clone())
                 .header("amt", total_eq)
                 .header("dest", 3) // 3: internal, 4: on chain
-                .header("toAddr", recipient_address_1)
+                .header("toAddr", address_sequence)
                 .header("fee", 0)
                 .build()?;
 
