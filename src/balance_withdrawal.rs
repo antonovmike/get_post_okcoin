@@ -63,16 +63,14 @@ pub async fn withdrawal(current_balance: f64, address: &str) -> Result<(), Box<d
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
 
-    let body = format!(r#"
-    {}
-        "amt":"{}",
+    let body = json!({
+        "amt": current_balance,
         "fee":"0.0005",
         "dest":"3",
         "ccy":"BTC",
-        "chain":"STX",
-        "toAddr":"{}"
-    {}
-    "#, "{", current_balance, address, "}");
+        "chain":"BTC-Bitcoin",
+        "toAddr": address
+    });
 
     let message = format!("{timestamp}POST{URL_WITHDRAWAL}{body}");
     let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));

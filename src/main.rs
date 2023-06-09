@@ -14,7 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut account_counter = 2;
 
     loop {
-        let current_balance = balance().await?;
+        let _current_balance = balance().await?;
         let current_balance = 0.1;
 
         if current_balance >= AMOUNT {
