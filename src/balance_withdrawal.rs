@@ -61,12 +61,24 @@ pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<d
     let client = Client::new();
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-    let message = format!("{timestamp}POST{URL_WITHDRAWAL}");
-    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
-
-    dbg!(&sign);
 
     let url_withdrawal = format!("{URL_WITHDRAWAL}&amount={current_balance}&destination={address}");
+    let message = format!("{timestamp}POST{url_withdrawal}");
+    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
+
+// BODY
+/*
+POST /api/v5/asset/withdrawal
+
+{
+    "amt":"1",
+    "fee":"0.0005",
+    "dest":"3",
+    "ccy":"BTC",
+    "chain":"BTC-Bitcoin",
+    "toAddr":"17DKe3kkkkiiiiTvAKKi2vMPbm1Bz3CMKw"
+}
+ */
 
     let request = client
         .post(format!("{URL_BASE}{url_withdrawal}"))
