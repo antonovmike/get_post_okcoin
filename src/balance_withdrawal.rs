@@ -22,23 +22,23 @@ async fn personal_data() -> Vec<String> {
     let api_secret = dotenv::var("OKCOIN_API_SECRET").expect("OKCOIN_API_SECRET not found");
     let passphrase = dotenv::var("OKCOIN_PASS_PHRASE").expect("OKCOIN_PASS_PHRASE not found");
 
-    let api_an_pass = vec![api_key, api_secret, passphrase];
-    api_an_pass
+    let api_and_pass = vec![api_key, api_secret, passphrase];
+    api_and_pass
 }
 
 pub async fn b_and_w() -> Result<u64, Box<dyn std::error::Error>> {
-    let api_an_pass = personal_data().await;
+    let api_and_pass = personal_data().await;
 
     let client = Client::new();
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
     let message = format!("{timestamp}GET{URL_BALANCE}");
-    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &api_an_pass[1]));
+    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &api_and_pass[1]));
 
     let request = client
         .get(format!("{URL_BASE}{URL_BALANCE}"))
-        .header("OK-ACCESS-KEY", &api_an_pass[0])
-        .header("OK-ACCESS-PASSPHRASE", &api_an_pass[2])
+        .header("OK-ACCESS-KEY", &api_and_pass[0])
+        .header("OK-ACCESS-PASSPHRASE", &api_and_pass[2])
         .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
         .header("Content-Type", "application/json")
         .header("OK-ACCESS-SIGN", sign.clone())
@@ -56,20 +56,20 @@ pub async fn b_and_w() -> Result<u64, Box<dyn std::error::Error>> {
 }
 
 pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let api_an_pass = personal_data().await;
+    let api_and_pass = personal_data().await;
 
     let client = Client::new();
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
     let message = format!("{timestamp}GET{URL_WITHDRAWAL}");
-    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &api_an_pass[1]));
+    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &api_and_pass[1]));
 
     dbg!(&sign);
 
     let request = client
         .post(format!("{URL_BASE}{URL_WITHDRAWAL}"))
-        .header("OK-ACCESS-KEY", &api_an_pass[0])
-        .header("OK-ACCESS-PASSPHRASE", &api_an_pass[2])
+        .header("OK-ACCESS-KEY", &api_and_pass[0])
+        .header("OK-ACCESS-PASSPHRASE", &api_and_pass[2])
         .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
         .header("Content-Type", "application/json")
         .header("OK-ACCESS-SIGN", sign.clone())
