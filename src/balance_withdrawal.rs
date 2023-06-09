@@ -61,7 +61,7 @@ pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<d
     let client = Client::new();
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-    let message = format!("{timestamp}GET{URL_WITHDRAWAL}");
+    let message = format!("{timestamp}POST{URL_WITHDRAWAL}");
     let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
 
     dbg!(&sign);
