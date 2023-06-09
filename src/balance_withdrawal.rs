@@ -62,36 +62,29 @@ pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<d
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
 
-    let url_withdrawal = format!("{URL_WITHDRAWAL}&amount={current_balance}&destination={address}");
-    let message = format!("{timestamp}POST{url_withdrawal}");
+    let body = r#"
+    {
+        "amt":"1",
+        "fee":"0.0005",
+        "dest":"3",
+        "ccy":"BTC",
+        "chain":"BTC-Bitcoin",
+        "toAddr":"17DKe3kkkkiiiiTvAKKi2vMPbm1Bz3CMKw"
+    }
+    "#.to_string();
+
+    let message = format!("{timestamp}POST{URL_WITHDRAWAL}{body}");
     let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
 
-// BODY
-/*
-POST /api/v5/asset/withdrawal
-
-{
-    "amt":"1",
-    "fee":"0.0005",
-    "dest":"3",
-    "ccy":"BTC",
-    "chain":"BTC-Bitcoin",
-    "toAddr":"17DKe3kkkkiiiiTvAKKi2vMPbm1Bz3CMKw"
-}
- */
-
     let request = client
-        .post(format!("{URL_BASE}{url_withdrawal}"))
+        .post(format!("{URL_BASE}{URL_WITHDRAWAL}"))
         .header("accept", "application/json")
         .header("CONTENT-TYPE", "application/json")
         .header("OK-ACCESS-KEY", &key_and_pass[0])
         .header("OK-ACCESS-SIGN", sign)
         .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
         .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
-        // .header("amt", current_balance)
-        // .header("dest", 3) // 3: internal, 4: on chain
-        // .header("toAddr", address)
-        // .header("fee", 0)
+        .body(body)
         .build()?;
 
     let response = client.execute(request).await?;
