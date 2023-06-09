@@ -1,6 +1,7 @@
 use base64::engine::{general_purpose, Engine};
 use hmac_sha256::HMAC;
 use reqwest::Client;
+use serde_json::json;
 
 use crate::constants::*;
 
@@ -26,7 +27,7 @@ async fn personal_data() -> Vec<String> {
     api_and_pass
 }
 
-pub async fn b_and_w() -> Result<u64, Box<dyn std::error::Error>> {
+pub async fn balance() -> Result<f64, Box<dyn std::error::Error>> {
     let key_and_pass = personal_data().await;
 
     let client = Client::new();
@@ -50,28 +51,28 @@ pub async fn b_and_w() -> Result<u64, Box<dyn std::error::Error>> {
     let balance_response: BalanseResponse = serde_json::from_str(&json)?;
     println!("{balance_response:#?}");
 
-    let current_balance = balance_response.data[0].current_balance.parse::<u64>()?;
+    let current_balance = balance_response.data[0].current_balance.parse::<f64>()?;
 
     Ok(current_balance)
 }
 
-pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn withdrawal(current_balance: f64, address: &str) -> Result<(), Box<dyn std::error::Error>> {
     let key_and_pass = personal_data().await;
 
     let client = Client::new();
 
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
 
-    let body = r#"
-    {
-        "amt":"1",
+    let body = format!(r#"
+    {}
+        "amt":"{}",
         "fee":"0.0005",
         "dest":"3",
         "ccy":"BTC",
-        "chain":"BTC-Bitcoin",
-        "toAddr":"17DKe3kkkkiiiiTvAKKi2vMPbm1Bz3CMKw"
-    }
-    "#.to_string();
+        "chain":"STX",
+        "toAddr":"{}"
+    {}
+    "#, "{", current_balance, address, "}");
 
     let message = format!("{timestamp}POST{URL_WITHDRAWAL}{body}");
     let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
@@ -84,7 +85,7 @@ pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<d
         .header("OK-ACCESS-SIGN", sign)
         .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
         .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
-        .body(body)
+        .body(body.to_string())
         .build()?;
 
     let response = client.execute(request).await?;

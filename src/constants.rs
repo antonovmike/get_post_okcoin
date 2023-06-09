@@ -1,4 +1,4 @@
-pub const AMOUNT: u64 = 0;
+pub const AMOUNT: f64 = 0.1;
 
 pub const URL_BASE: &str = "https://www.okcoin.com";
 pub const URL_BALANCE: &str = "/api/v5/account/balance?ccy=STX";

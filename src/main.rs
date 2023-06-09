@@ -1,7 +1,7 @@
 use std::thread;
 use std::time::Duration;
 
-use crate::balance_withdrawal::b_and_w;
+use crate::balance_withdrawal::balance;
 
 use balance_withdrawal::withdrawal;
 use constants::*;
@@ -14,7 +14,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut account_counter = 2;
 
     loop {
-        let current_balance = b_and_w().await?;
+        let current_balance = balance().await?;
+        let current_balance = 0.1;
 
         if current_balance >= AMOUNT {
             if account_counter == 2 {
