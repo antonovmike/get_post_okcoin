@@ -14,11 +14,3 @@ hmac-sha256 = "1.1.6"
 hex = "0.4.3"
 help = "0.0.0"
 serde = { version = "1.0.163", features = ["derive"] }
-
-[[bin]]
-name = "withdrawal_of_tokens"
-path = "withdrawal_of_tokens/main.rs"
-
-[[bin]]
-name = "check_n_transfer"
-path = "check_n_transfer/main.rs"

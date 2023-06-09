@@ -1,11 +1,5 @@
 # stx_test
 
-```bash
-cargo run --bin check_n_transfer
-```
-```bash
-cargo run --bin withdrawal_of_tokens
-```
 
 **Business requirements**
 
