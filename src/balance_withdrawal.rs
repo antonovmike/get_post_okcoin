@@ -1,14 +1,12 @@
-use reqwest::Client;
-use base64::engine::{Engine, general_purpose};
+use base64::engine::{general_purpose, Engine};
 use hmac_sha256::HMAC;
-use std::thread;
-use std::time::Duration;
+use reqwest::Client;
 
-const AMOUNT: u64 = 0;
+use crate::constants::*;
 
 #[derive(Debug, serde::Deserialize)]
 struct BalanseResponseData {
-    #[serde(rename="totalEq")]
+    #[serde(rename = "totalEq")]
     total_eq: String,
 }
 
@@ -19,86 +17,72 @@ struct BalanseResponse {
     data: Vec<BalanseResponseData>,
 }
 
-pub async fn b_and_w() -> Result<(), Box<dyn std::error::Error>> {
+async fn personal_data() -> Vec<String> {
     let api_key = dotenv::var("OKCOIN_API_KEY").expect("OKCOIN_API_KEY not found");
     let api_secret = dotenv::var("OKCOIN_API_SECRET").expect("OKCOIN_API_SECRET not found");
     let passphrase = dotenv::var("OKCOIN_PASS_PHRASE").expect("OKCOIN_PASS_PHRASE not found");
 
-    let recipient_address_1 = "RECIPIENT_ADDRESS_1";
-    let recipient_address_2 = "RECIPIENT_ADDRESS_2";
+    let api_an_pass = vec![api_key, api_secret, passphrase];
+    api_an_pass
+}
+
+pub async fn b_and_w() -> Result<u64, Box<dyn std::error::Error>> {
+    let api_an_pass = personal_data().await;
 
     let client = Client::new();
 
-    let url_base = "https://www.okcoin.com";
-    let url_balance = "/api/v5/account/balance?ccy=STX";
-    let url_withdrawal = "/api/v5/asset/withdrawal?ccy=STX";
-
     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-    let message = format!("{timestamp}GET{url_balance}");
-    let sign = general_purpose::STANDARD.encode(
-        HMAC::mac(message, api_secret.clone())
-    );
+    let message = format!("{timestamp}GET{URL_BALANCE}");
+    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &api_an_pass[1]));
 
-    let mut account_counter = 2;
+    let request = client
+        .get(format!("{URL_BASE}{URL_BALANCE}"))
+        .header("OK-ACCESS-KEY", &api_an_pass[0])
+        .header("OK-ACCESS-PASSPHRASE", &api_an_pass[2])
+        .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
+        .header("Content-Type", "application/json")
+        .header("OK-ACCESS-SIGN", sign.clone())
+        .build()?;
 
-    #[allow(unused)]
-    let mut address_sequence = recipient_address_1;
+    let response = client.execute(request).await?;
 
-    loop {
-        let request = client.get(format!("{url_base}{url_balance}"))
-            .header("OK-ACCESS-KEY", api_key.clone())
-            .header("OK-ACCESS-PASSPHRASE", passphrase.clone())
-            .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
-            .header("Content-Type", "application/json")
-            .header("OK-ACCESS-SIGN", sign.clone())
-            .build()?;
+    let json = response.text().await?;
+    let balance_response: BalanseResponse = serde_json::from_str(&json)?;
+    // let code_num = balance_response.code.parse::<u8>()?;
+    println!("{balance_response:#?}");
+    let total_eq = balance_response.data[0].total_eq.parse::<u64>()?;
 
-        let response = client.execute(request).await?;
-
-        let json = response.text().await?;
-        let balance_response: BalanseResponse = serde_json::from_str(&json)?;
-        // let code_num = balance_response.code.parse::<u8>()?;
-        println!("{balance_response:#?}");
-        let total_eq = balance_response.data[0].total_eq.parse::<u64>()?;
-
-        if total_eq >= AMOUNT {
-            if account_counter == 2 {
-                address_sequence = recipient_address_1;
-                account_counter = 1
-            } else {
-                address_sequence = recipient_address_2;
-                account_counter = 2
-            }
-
-            let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-            let message = format!("{timestamp}GET{url_withdrawal}");
-            let sign = general_purpose::STANDARD.encode(
-                HMAC::mac(message, api_secret.clone())
-            );
-            dbg!(&sign);
-            let request = client.post(format!("{url_base}{url_withdrawal}"))
-                .header("OK-ACCESS-KEY", api_key.clone())
-                .header("OK-ACCESS-PASSPHRASE", passphrase.clone())
-                .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
-                .header("Content-Type", "application/json")
-                .header("OK-ACCESS-SIGN", sign.clone())
-                .header("amt", total_eq)
-                .header("dest", 3) // 3: internal, 4: on chain
-                .header("toAddr", address_sequence)
-                .header("fee", 0)
-                .build()?;
-
-            let response = client.execute(request).await?;
-
-            let json = response.text().await?;
-            println!("POST: {}", &json);
-        }
-
-        thread::sleep(Duration::from_secs(3));
-    }
-
-    #[allow(unused)]
-    Ok(())
+    Ok(total_eq)
 }
 
-// fn withdrawal() {}
+pub async fn withdrawal(current_balance: u64, address: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let api_an_pass = personal_data().await;
+
+    let client = Client::new();
+
+    let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+    let message = format!("{timestamp}GET{URL_WITHDRAWAL}");
+    let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &api_an_pass[1]));
+
+    dbg!(&sign);
+
+    let request = client
+        .post(format!("{URL_BASE}{URL_WITHDRAWAL}"))
+        .header("OK-ACCESS-KEY", &api_an_pass[0])
+        .header("OK-ACCESS-PASSPHRASE", &api_an_pass[2])
+        .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
+        .header("Content-Type", "application/json")
+        .header("OK-ACCESS-SIGN", sign.clone())
+        .header("amt", current_balance)
+        .header("dest", 3) // 3: internal, 4: on chain
+        .header("toAddr", address)
+        .header("fee", 0)
+        .build()?;
+
+    let response = client.execute(request).await?;
+
+    let json = response.text().await?;
+    println!("POST: {}", &json);
+
+    Ok(())
+}
