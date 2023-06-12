@@ -2,6 +2,7 @@ use base64::engine::{general_purpose, Engine};
 use hmac_sha256::HMAC;
 use reqwest::Client;
 use serde_json::json;
+// use mockito::{Server, Matcher};
 
 use crate::constants::*;
 
@@ -56,7 +57,10 @@ pub async fn balance() -> Result<f64, Box<dyn std::error::Error>> {
     Ok(current_balance)
 }
 
-pub async fn withdrawal(current_balance: f64, address: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn withdrawal(
+    current_balance: f64,
+    address: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
     let key_and_pass = personal_data().await;
 
     let client = Client::new();
@@ -92,4 +96,34 @@ pub async fn withdrawal(current_balance: f64, address: &str) -> Result<(), Box<d
     println!("POST: {}", &json);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[tokio::test]
+    async fn test_get_balance() -> Result<(), Box<dyn std::error::Error>> {
+        let mut server = mockito::Server::new();
+        let key_and_pass = personal_data().await;
+
+        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+        let message = format!("{timestamp}GET{URL_BALANCE}");
+        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
+
+        let mock = server
+            .mock("GET", format!("/{URL_BALANCE}").as_str())
+            .with_status(200)
+            .with_header("OK-ACCESS-KEY", &key_and_pass[0])
+            .with_header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
+            .with_header("OK-ACCESS-TIMESTAMP", &format!("{timestamp}"))
+            .with_header("Content-Type", "application/json")
+            .with_header("OK-ACCESS-SIGN", &sign)
+            .create();
+
+        let balance = balance().await?;
+        assert_eq!(balance, 1000.0, "Expected balance is 1000");
+        mock.assert();
+
+        Ok(())
+    }
 }
