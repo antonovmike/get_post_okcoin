@@ -1,5 +1,5 @@
 [package]
-name = "stx_test"
+name = "get_post_okcoin"
 version = "0.1.0"
 edition = "2021"
 
