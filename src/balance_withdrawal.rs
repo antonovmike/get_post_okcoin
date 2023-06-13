@@ -3,6 +3,7 @@ use hmac_sha256::HMAC;
 use reqwest::Client;
 use serde_json::json;
 use async_trait::async_trait;
+use error::Result;
 
 use crate::constants::*;
 
@@ -19,27 +20,6 @@ struct BalanseResponse {
     data: Vec<BalanseResponseData>,
 }
 
-mod error {
-    pub enum Error {
-        ApiError,
-        HttpError,
-        OtherFuckingError,
-    }
-
-    pub type Result<T, E = Error> = ::core::result::Result<T, E>;
-}
-
-use error::Result;
-/// Client for a crypto exchange
-#[async_trait]
-pub trait XClient {
-    /// Get balance of an attached account
-    async fn get_balance(&self) -> Result<f64, Box<dyn std::error::Error>>;
-
-    /// Withdraw funds to address specified
-    async fn withdrawal(&self, current_balance: f64, address: String) -> Result<(), Box<dyn std::error::Error>>;
-}
-
 pub struct Address {
     pub recipient_addr_1: String,
     pub recipient_addr_2: String,
@@ -51,6 +31,26 @@ pub struct OkClick {
     pub passhphrase: String,
     pub base_url: String,
     pub http_client: reqwest::Client,
+}
+
+mod error {
+    pub enum Error {
+        ApiError,
+        HttpError,
+        OtherFuckingError,
+    }
+
+    pub type Result<T, E = Error> = ::core::result::Result<T, E>;
+}
+
+/// Client for a crypto exchange
+#[async_trait]
+pub trait XClient {
+    /// Get balance of an attached account
+    async fn get_balance(&self) -> Result<f64, Box<dyn std::error::Error>>;
+
+    /// Withdraw funds to address specified
+    async fn withdrawal(&self, current_balance: f64, address: String) -> Result<(), Box<dyn std::error::Error>>;
 }
 
 #[async_trait]
