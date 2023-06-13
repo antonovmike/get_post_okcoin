@@ -3,6 +3,7 @@ use hmac_sha256::HMAC;
 use reqwest::Client;
 use serde_json::json;
 // use mockito::{Server, Matcher};
+use mockito::Matcher::PartialJsonString;
 
 use crate::constants::*;
 
@@ -122,6 +123,36 @@ mod tests {
 
         let balance = balance().await?;
         assert_eq!(balance, 1000.0, "Expected balance is 1000");
+        mock.assert();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_withdrawal() -> Result<(), Box<dyn std::error::Error>> {
+        let mut server = mockito::Server::new();
+        let key_and_pass = personal_data().await;
+
+        let body = PartialJsonString("{amt: 1000, fee: 0.0005, dest: 3, ccy: BTC, chain: BTC-Bitcoin, toAddr: \"0x1234567890123456789012345678901234567890\"}".to_string());
+
+        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+        let message = format!("{timestamp}POST{URL_WITHDRAWAL}{body}");
+        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
+
+        let mock = server
+            .mock("POST", "/withdrawal")
+            .match_body(body)
+            .with_status(200)
+            .with_header("accept", "application/json")
+            .with_header("CONTENT-TYPE", "application/json")
+            .with_header("OK-ACCESS-KEY", &key_and_pass[0])
+            .with_header("OK-ACCESS-SIGN", &sign)
+            .with_header("OK-ACCESS-TIMESTAMP", &format!("{timestamp}"))
+            .with_header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
+            .create();
+
+        withdrawal(1001.0, RECIPIENT_ADDR_1).await?;
+
         mock.assert();
 
         Ok(())
