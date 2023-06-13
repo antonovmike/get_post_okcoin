@@ -131,8 +131,7 @@ mod tests {
         let mut server = mockito::Server::new();
         let key_and_pass = personal_data().await;
 
-        use mockito::Matcher::PartialJsonString;
-        let body = PartialJsonString(
+        let body = mockito::Matcher::PartialJsonString(
             "{amt: 1000, fee: 0.0005, dest: 3, ccy: BTC, chain: BTC-Bitcoin, toAddr: \"0x1234567890123456789012345678901234567890\"}"
             .to_string());
 
