@@ -32,26 +32,25 @@ mod error {
 use error::Result;
 /// Client for a crypto exchange
 #[async_trait]
-trait XClient {
+pub trait XClient {
     /// Get balance of an attached account
     async fn get_balance(&self) -> Result<f64, Box<dyn std::error::Error>>;
 
     /// Withdraw funds to address specified
-    async fn withdraw_funds(&self, current_balance: f64, address: Address) -> Result<(), Box<dyn std::error::Error>>;
+    async fn withdrawal(&self, current_balance: f64, address: String) -> Result<(), Box<dyn std::error::Error>>;
 }
 
-struct Address {
-    recipient_addr_1: String,
-    recipient_addr_2: String,
+pub struct Address {
+    pub recipient_addr_1: String,
+    pub recipient_addr_2: String,
 }
 
 /// Real OkClick exchange client
-struct OkClick {
-    access_key: String,
-    passhphrase: String,
-    base_url: String,
-    http_client: reqwest::Client,
-    // ...
+pub struct OkClick {
+    pub access_key: String,
+    pub passhphrase: String,
+    pub base_url: String,
+    pub http_client: reqwest::Client,
 }
 
 #[async_trait]
@@ -86,12 +85,8 @@ impl XClient for OkClick {
     Ok(current_balance)
     }
 
-    async fn withdraw_funds(&self, current_balance: f64, address: Address) -> Result<(), Box<dyn std::error::Error>> {
+    async fn withdrawal(&self, current_balance: f64, address: String) -> Result<(), Box<dyn std::error::Error>> {
         let key_and_pass = personal_data().await;
-        let adress = Address {
-            recipient_addr_1: RECIPIENT_ADDR_1.to_string(),
-            recipient_addr_2: RECIPIENT_ADDR_2.to_string(),
-        };
         let client = Client::new();
     
         let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
@@ -102,7 +97,7 @@ impl XClient for OkClick {
             "dest":"3",
             "ccy":"BTC",
             "chain":"BTC-Bitcoin",
-            "toAddr": address.recipient_addr_1
+            "toAddr": address
         });
     
         let message = format!("{timestamp}POST{URL_WITHDRAWAL}{body}");
@@ -153,7 +148,7 @@ mod tests {
             Ok(self.balance)
         }
 
-        async fn withdraw_funds(&self, _: f64, _: Address) -> Result<(), Box<dyn std::error::Error>> {
+        async fn withdrawal(&self, _: f64, _: String) -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
     }
