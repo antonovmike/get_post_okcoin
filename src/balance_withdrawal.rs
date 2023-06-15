@@ -50,20 +50,36 @@ trait ExchangeClient {
 }
 
 pub struct OkCoinClient {
-
+    pub api_key: String,
+    pub passphrase: String,
+    pub base_url: String,
+    pub secret: String,
 }
 
 impl OkCoinClient {
-    pub fn new() -> Self {
+    pub fn new(api_key: String, passphrase: String, base_url: String, secret: String) -> Self {
+        Self { api_key, passphrase, base_url, secret }
+    }
+    fn timestamp() {
         todo!()
     }
 }
 
 impl ExchangeClient for OkCoinClient {
     fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
-        todo!()
+        let _ = self.api_key;
+        let _ = self.passphrase;
+        let _ = self.base_url;
+        let _ = self.secret;
+        Self::timestamp();
+        Ok(0.0)
     }
     fn withdraw(&self, address: String) -> Result<(), Box<dyn Error>> {
-        todo!()
+        let _ = self.api_key;
+        let _ = self.passphrase;
+        let _ = self.base_url;
+        let _ = self.secret;
+        Self::timestamp();
+        Ok(())
     }
 }
