@@ -125,4 +125,16 @@ mod test {
         );
         service.run().expect("Success!");
     }
+
+    #[test]
+    fn withdraw_fail() {
+        let exchange_client = MockingClient {
+            balance: 100.0,
+            withdraw_success: false,
+        };
+        let service = Service::new(
+            Duration::from_secs(3), 0.0, String::new(), exchange_client
+        );
+        service.run().expect_err("Withdraw failed!");
+    }
 }
