@@ -1,4 +1,3 @@
-use std::thread;
 use std::time::Duration;
 
 use constants::*;
@@ -28,6 +27,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err(err);
         }
     }
-
-    Ok(())
 }

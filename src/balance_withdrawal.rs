@@ -1,15 +1,13 @@
 use std::error::Error;
 use std::time::Duration;
 
-use base64::engine::{general_purpose, Engine};
-use hmac_sha256::HMAC;
-// use humantime::Duration;
-use reqwest::Client;
-// use serde::de::Error;
-use serde_json::json;
-use tokio::time::Timeout;
+// use base64::engine::{general_purpose, Engine};
+// use hmac_sha256::HMAC;
+// use reqwest::Client;
+// use serde_json::json;
+// use tokio::time::Timeout;
 
-use crate::constants::*;
+// use crate::constants::*;
 
 #[derive(Debug, Clone)]
 pub struct Service<EC: ExchangeClient> {
@@ -44,7 +42,7 @@ pub trait ExchangeClient {
     fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
         todo!()
     }
-    fn withdraw(&self, address: String) -> Result<(), Box<dyn Error>> {
+    fn withdraw(&self, _address: String) -> Result<(), Box<dyn Error>> {
         todo!()
     }
 }
@@ -79,7 +77,7 @@ impl ExchangeClient for OkCoinClient {
         Self::timestamp();
         Ok(0.0)
     }
-    fn withdraw(&self, address: String) -> Result<(), Box<dyn Error>> {
+    fn withdraw(&self, _address: String) -> Result<(), Box<dyn Error>> {
         let _ = self.api_key;
         let _ = self.passphrase;
         let _ = self.url_base;
@@ -102,7 +100,7 @@ mod test {
         fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
             Ok(self.balance)
         }
-        fn withdraw(&self, address: String) -> Result<(), Box<dyn Error>> {
+        fn withdraw(&self, _address: String) -> Result<(), Box<dyn Error>> {
             if self.withdraw_success {
                 Ok(())
             } else {
