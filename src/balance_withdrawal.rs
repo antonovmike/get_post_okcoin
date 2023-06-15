@@ -33,7 +33,7 @@ impl<EC: ExchangeClient> Service<EC> {
         if self.exchange_client.get_balance()? > self.threshold {
             self.exchange_client.withdraw(self.address.clone())?
         }
-        
+
         std::thread::sleep(self.timeout);
 
         Ok(())
@@ -93,14 +93,24 @@ impl ExchangeClient for OkCoinClient {
 mod test {
     use super::*;
 
-    struct MockingClient {}
+    struct MockingClient {
+        balance: f64,
+        withdraw_success: bool,
+    }
 
     impl ExchangeClient for MockingClient {
         fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
-            Ok(0.0)
+            Ok(self.balance)
         }
         fn withdraw(&self, address: String) -> Result<(), Box<dyn Error>> {
-            Ok(())
+            if self.withdraw_success {
+                Ok(())
+            } else {
+                Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::AddrInUse,
+                    "TEST".to_string(),
+                )))
+            }
         }
     }
 }
