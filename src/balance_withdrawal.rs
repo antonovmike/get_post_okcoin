@@ -11,11 +11,12 @@ use tokio::time::Timeout;
 
 use crate::constants::*;
 
+#[derive(Debug, Clone)]
 pub struct Service<EC: ExchangeClient> {
-    timeout: Duration,
-    threshold: f64,
-    address: String,
-    exchange_client: EC,
+    pub timeout: Duration,
+    pub threshold: f64,
+    pub address: String,
+    pub exchange_client: EC,
 }
 
 impl<EC: ExchangeClient> Service<EC> {
@@ -31,7 +32,7 @@ impl<EC: ExchangeClient> Service<EC> {
     pub fn run(&self) -> Result<(), Box<dyn Error>> {
         loop {
             if self.exchange_client.get_balance()? > self.threshold {
-                self.exchange_client.withdraw(self.address)?
+                self.exchange_client.withdraw(self.address.clone())?
             }
             std::thread::sleep(self.timeout);
         }
@@ -40,7 +41,7 @@ impl<EC: ExchangeClient> Service<EC> {
     }
 }
 
-trait ExchangeClient {
+pub trait ExchangeClient {
     fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
         todo!()
     }
@@ -52,13 +53,13 @@ trait ExchangeClient {
 pub struct OkCoinClient {
     pub api_key: String,
     pub passphrase: String,
-    pub base_url: String,
+    pub url_base: String,
     pub secret: String,
 }
 
 impl OkCoinClient {
     pub fn new(api_key: String, passphrase: String, base_url: String, secret: String) -> Self {
-        Self { api_key, passphrase, base_url, secret }
+        Self { api_key, passphrase, url_base: base_url, secret }
     }
     fn timestamp() {
         todo!()
@@ -69,7 +70,7 @@ impl ExchangeClient for OkCoinClient {
     fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
         let _ = self.api_key;
         let _ = self.passphrase;
-        let _ = self.base_url;
+        let _ = self.url_base;
         let _ = self.secret;
         Self::timestamp();
         Ok(0.0)
@@ -77,7 +78,7 @@ impl ExchangeClient for OkCoinClient {
     fn withdraw(&self, address: String) -> Result<(), Box<dyn Error>> {
         let _ = self.api_key;
         let _ = self.passphrase;
-        let _ = self.base_url;
+        let _ = self.url_base;
         let _ = self.secret;
         Self::timestamp();
         Ok(())
