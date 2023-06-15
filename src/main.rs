@@ -12,7 +12,9 @@ mod constants;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timeout = Duration::from_secs(5);
     let threshold = 100.0;
-    let service = Service::new(timeout, threshold);
+    let address = RECIPIENT_ADDR_1.to_string();
+    let service = Service::new(timeout, threshold, address, exchange_client);
+    service.run();
 
     #[allow(unused)]
     Ok(())
