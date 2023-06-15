@@ -30,12 +30,11 @@ impl<EC: ExchangeClient> Service<EC> {
     }
 
     pub fn run(&self) -> Result<(), Box<dyn Error>> {
-        loop {
-            if self.exchange_client.get_balance()? > self.threshold {
-                self.exchange_client.withdraw(self.address.clone())?
-            }
-            std::thread::sleep(self.timeout);
+        if self.exchange_client.get_balance()? > self.threshold {
+            self.exchange_client.withdraw(self.address.clone())?
         }
+        
+        std::thread::sleep(self.timeout);
 
         Ok(())
     }
@@ -59,7 +58,12 @@ pub struct OkCoinClient {
 
 impl OkCoinClient {
     pub fn new(api_key: String, passphrase: String, base_url: String, secret: String) -> Self {
-        Self { api_key, passphrase, url_base: base_url, secret }
+        Self {
+            api_key,
+            passphrase,
+            url_base: base_url,
+            secret,
+        }
     }
     fn timestamp() {
         todo!()
@@ -82,5 +86,21 @@ impl ExchangeClient for OkCoinClient {
         let _ = self.secret;
         Self::timestamp();
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    struct MockingClient {}
+
+    impl ExchangeClient for MockingClient {
+        fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
+            Ok(0.0)
+        }
+        fn withdraw(&self, address: String) -> Result<(), Box<dyn Error>> {
+            Ok(())
+        }
     }
 }
