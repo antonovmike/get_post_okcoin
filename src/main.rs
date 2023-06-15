@@ -1,34 +1,17 @@
 use std::thread;
 use std::time::Duration;
 
-use crate::balance_withdrawal::balance;
-
-use balance_withdrawal::withdrawal;
 use constants::*;
+
+use crate::balance_withdrawal::*;
 
 mod balance_withdrawal;
 mod constants;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut account_counter = 2;
-
-    loop {
-        let _current_balance = balance().await?;
-        let current_balance = 0.1;
-
-        if current_balance >= AMOUNT {
-            if account_counter == 2 {
-                withdrawal(current_balance, RECIPIENT_ADDR_1).await?;
-                account_counter = 1
-            } else {
-                withdrawal(current_balance, RECIPIENT_ADDR_2).await?;
-                account_counter = 2
-            }
-        }
-
-        thread::sleep(Duration::from_secs(3));
-    }
+    let timeout = Duration::from_secs(5);
+    let service = Service::new(timeout);
 
     #[allow(unused)]
     Ok(())
