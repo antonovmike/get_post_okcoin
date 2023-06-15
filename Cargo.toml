@@ -15,3 +15,5 @@ hex = "0.4.3"
 help = "0.0.0"
 serde = { version = "1.0.163", features = ["derive"] }
 mockito = "1.0.2"
+thiserror = "1.0.40"
+async-trait = "0.1.68"

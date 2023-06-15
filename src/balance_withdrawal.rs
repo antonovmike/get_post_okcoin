@@ -1,13 +1,27 @@
 use std::error::Error;
 use std::time::Duration;
 
-// use base64::engine::{general_purpose, Engine};
-// use hmac_sha256::HMAC;
-// use reqwest::Client;
+use async_trait::async_trait;
+use base64::engine::{general_purpose, Engine};
+use hmac_sha256::HMAC;
+use reqwest::Client;
 // use serde_json::json;
 // use tokio::time::Timeout;
 
-// use crate::constants::*;
+use crate::constants::*;
+
+#[derive(Debug, serde::Deserialize)]
+struct BalanseResponseData {
+    #[serde(rename = "totalEq")]
+    current_balance: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct BalanseResponse {
+    #[allow(unused)]
+    code: String,
+    data: Vec<BalanseResponseData>,
+}
 
 #[derive(Debug, Clone)]
 pub struct Service<EC: ExchangeClient> {
@@ -17,7 +31,7 @@ pub struct Service<EC: ExchangeClient> {
     pub exchange_client: EC,
 }
 
-impl<EC: ExchangeClient> Service<EC> {
+impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
     pub fn new(timeout: Duration, threshold: f64, address: String, exchange_client: EC) -> Self {
         Self {
             timeout,
@@ -28,7 +42,7 @@ impl<EC: ExchangeClient> Service<EC> {
     }
 
     pub fn run(&self) -> Result<(), Box<dyn Error>> {
-        if self.exchange_client.get_balance()? > self.threshold {
+        if self.exchange_client.get_balance()? > Box::pin(self.threshold) {
             self.exchange_client.withdraw(self.address.clone())?
         }
 
@@ -38,9 +52,44 @@ impl<EC: ExchangeClient> Service<EC> {
     }
 }
 
+async fn personal_data() -> Vec<String> {
+    let api_key = dotenv::var("OKCOIN_API_KEY").expect("OKCOIN_API_KEY not found");
+    let api_secret = dotenv::var("OKCOIN_API_SECRET").expect("OKCOIN_API_SECRET not found");
+    let passphrase = dotenv::var("OKCOIN_PASS_PHRASE").expect("OKCOIN_PASS_PHRASE not found");
+
+    let api_and_pass = vec![api_key, api_secret, passphrase];
+    api_and_pass
+}
+
+#[async_trait]
 pub trait ExchangeClient {
-    fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
-        todo!()
+    async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
+        let key_and_pass = personal_data().await;
+
+        let client = Client::new();
+
+        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+        let message = format!("{timestamp}GET{URL_BALANCE}");
+        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
+
+        let request = client
+            .get(format!("{URL_BASE}{URL_BALANCE}"))
+            .header("OK-ACCESS-KEY", &key_and_pass[0])
+            .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
+            .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
+            .header("Content-Type", "application/json")
+            .header("OK-ACCESS-SIGN", sign.clone())
+            .build()?;
+
+        let response = client.execute(request).await?;
+
+        let json = response.text().await?;
+        let balance_response: BalanseResponse = serde_json::from_str(&json)?;
+        println!("{balance_response:#?}");
+
+        let current_balance = balance_response.data[0].current_balance.parse::<f64>()?;
+
+        Ok(current_balance)
     }
     fn withdraw(&self, _address: String) -> Result<(), Box<dyn Error>> {
         todo!()
