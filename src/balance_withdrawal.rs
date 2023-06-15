@@ -13,12 +13,14 @@ use crate::constants::*;
 
 pub struct Service {
     timeout: Duration,
+    threshold: f64,
 }
 
 impl Service {
-    pub fn new(timeout: Duration) -> Self {
+    pub fn new(timeout: Duration, threshold: f64) -> Self {
         Self {
             timeout,
+            threshold,
         }
     }
 
@@ -29,4 +31,9 @@ impl Service {
 
         Ok(())
     }
+}
+
+trait ExchangeClient {
+    fn get_balance(&self) -> Result<f64, Box<dyn Error>>;
+    fn withdraw(&self, address: String) -> Result<(), Box<dyn Error>>;
 }

@@ -11,7 +11,8 @@ mod constants;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let timeout = Duration::from_secs(5);
-    let service = Service::new(timeout);
+    let threshold = 100.0;
+    let service = Service::new(timeout, threshold);
 
     #[allow(unused)]
     Ok(())
