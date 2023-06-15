@@ -113,4 +113,16 @@ mod test {
             }
         }
     }
+
+    #[test]
+    fn success() {
+        let exchange_client = MockingClient {
+            balance: 100.0,
+            withdraw_success: true,
+        };
+        let service = Service::new(
+            Duration::from_secs(3), 0.0, String::new(), exchange_client
+        );
+        service.run().expect("Success!");
+    }
 }
