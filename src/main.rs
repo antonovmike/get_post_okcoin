@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let current_balance = OkCoinClient::get_balance(&okcoin_client).await?;
     // let current_balance = service.exchange_client.get_balance().await?;
 
-    let withdraw = ExchangeClient::withdraw(&okcoin_client, current_balance, address).await?;
+    let withdraw = OkCoinClient::withdraw(&okcoin_client, current_balance, address).await?;
     dbg!(withdraw);
 
     println!("\nWe got the balance: {current_balance}\n");
