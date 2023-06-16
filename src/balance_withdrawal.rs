@@ -170,7 +170,8 @@ impl ExchangeClient for OkCoinClient {
         let _ = self.base_url;
         let _ = self.secret;
         Self::timestamp();
-        Ok(0.0)
+        let current_balance = 0.0;
+        Ok(current_balance)
     }
     #[allow(unused)]
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
