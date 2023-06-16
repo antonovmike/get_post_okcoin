@@ -1,6 +1,5 @@
 # get_post_okcoin
 
-
 **Business requirements**
 
 Standalone module that makes automated withdrawals of STX token on the balance from an account on okcoin exchange. 
@@ -10,3 +9,5 @@ There should be configurable options:
 - there will be 2 addresses to send to, module should use them in turn
 
 [okcoin API](https://www.okcoin.com/docs-v5/)
+
+**Build instructions**
