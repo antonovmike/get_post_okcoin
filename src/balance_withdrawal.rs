@@ -51,8 +51,6 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
 }
 
 async fn personal_data() -> Vec<String> {
-    println!("Personal data");
-
     let api_key = dotenv::var("OKCOIN_API_KEY").expect("OKCOIN_API_KEY not found");
     let api_secret = dotenv::var("OKCOIN_API_SECRET").expect("OKCOIN_API_SECRET not found");
     let passphrase = dotenv::var("OKCOIN_PASS_PHRASE").expect("OKCOIN_PASS_PHRASE not found");
@@ -135,11 +133,6 @@ pub trait ExchangeClient {
 }
 
 #[derive(Debug, Clone)]
-// loop {
-//     if let Err(err) = service.run() {
-//         return Err(err);
-//     }
-// }
 pub struct OkCoinClient {
     pub api_key: String,
     pub passphrase: String,
@@ -156,30 +149,81 @@ impl OkCoinClient {
             secret,
         }
     }
-    fn timestamp() -> String {
-        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-        timestamp.to_string()
-    }
+    // fn timestamp() -> String {
+    //     let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+    //     timestamp.to_string()
+    // }
 }
 
 #[async_trait]
 impl ExchangeClient for OkCoinClient {
     async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
-        let _ = self.api_key;
-        let _ = self.passphrase;
-        let _ = self.base_url;
-        let _ = self.secret;
-        Self::timestamp();
-        let current_balance = 0.0;
-        Ok(current_balance)
+        println!("Get balance (ExchangeClient)");
+
+        let key_and_pass = personal_data().await;
+
+        let client = Client::new();
+
+        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+        let message = format!("{timestamp}GET{URL_BALANCE}");
+        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
+
+        let request = client
+            .get(format!("{URL_BASE}{URL_BALANCE}"))
+            .header("OK-ACCESS-KEY", &key_and_pass[0])
+            .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
+            .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
+            .header("Content-Type", "application/json")
+            .header("OK-ACCESS-SIGN", sign.clone())
+            .build()?;
+
+        let response = client.execute(request).await?;
+
+        let json = response.text().await?;
+        let balance_response: BalanseResponse = serde_json::from_str(&json)?;
+        println!("Balance response: {balance_response:#?}");
+
+        let current_balance = balance_response.data[0].current_balance.parse::<f64>()?;
+        println!("Current balance = {current_balance}");
+
+        Ok(200.0)
     }
-    #[allow(unused)]
+
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
-        let _ = self.api_key;
-        let _ = self.passphrase;
-        let _ = self.base_url;
-        let _ = self.secret;
-        Self::timestamp();
+        let key_and_pass = personal_data().await;
+        let client = Client::new();
+    
+        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+    
+        let body = json!({
+            "amt": current_balance,
+            "fee":"0.0005",
+            "dest":"3",
+            "ccy":"STX",
+            "chain":"STX-Bitcoin",
+            "toAddr": address
+        });
+    
+        let message = format!("{timestamp}POST{URL_WITHDRAWAL}{body}");
+        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
+    
+        let request = client
+            .post(format!("{URL_BASE}{URL_WITHDRAWAL}"))
+            .header("accept", "application/json")
+            .header("CONTENT-TYPE", "application/json")
+            .header("OK-ACCESS-KEY", &key_and_pass[0])
+            .header("OK-ACCESS-SIGN", sign)
+            .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
+            .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
+            .body(body.to_string())
+            .build()?;
+    
+        let response = client.execute(request).await?;
+    
+        let json = response.text().await?;
+
+        println!("POST: {}", &json);
+    
         Ok(())
     }
 }
