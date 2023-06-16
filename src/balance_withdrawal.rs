@@ -50,7 +50,8 @@ struct BalanseResponse {
 pub struct Service<EC: ExchangeClient> {
     pub timeout: Duration,
     pub threshold: f64,
-    pub address: String,
+    pub address_1: String,
+    pub address_2: String,
     pub exchange_client: EC,
 }
 
@@ -75,12 +76,13 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
     ///
     /// The `new` function is not returning anything. It is creating a new instance of a struct and
     /// initializing its fields with the provided arguments.
-    pub fn new(timeout: Duration, threshold: f64, address: String, exchange_client: EC) -> Self {
+    pub fn new(timeout: Duration, threshold: f64, address_1: String, address_2: String, exchange_client: EC) -> Self {
         println!("New Service ceated");
         Self {
             timeout,
             threshold,
-            address,
+            address_1,
+            address_2,
             exchange_client,
         }
     }
@@ -94,11 +96,23 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
 /// a `Result` type with an empty `Ok` value and an error type of `Box<dyn Error>`. However, the code
 /// after the loop is unreachable, so it will never be executed.
     pub async fn run(&self) -> Result<(), Box<dyn Error>> {
+        let mut account_counter = 2;
+
         loop {
             if self.exchange_client.get_balance().await? > self.threshold {
-                self.exchange_client
-                    .withdraw(0.0, self.address.clone())
-                    .await?
+                if account_counter == 2 {
+                    self.exchange_client
+                        .withdraw(0.0, self.address_1.clone())
+                        .await?;
+                    println!("test \t ADDRES 1");
+                    account_counter = 1
+                } else {
+                    self.exchange_client
+                        .withdraw(0.0, self.address_2.clone())
+                        .await?;
+                    println!("test \t ADDRES 2");
+                    account_counter = 2
+                }
             }
 
             std::thread::sleep(self.timeout);
@@ -309,7 +323,7 @@ mod test {
             balance: 100.0,
             withdraw_success: true,
         };
-        let service = Service::new(Duration::from_secs(3), 0.0, String::new(), exchange_client);
+        let service = Service::new(Duration::from_secs(TIMEOUT), 0.0, String::new(), String::new(), exchange_client);
         service.run().await.expect("Success!");
         Ok(())
     }
@@ -320,7 +334,7 @@ mod test {
             balance: 100.0,
             withdraw_success: false,
         };
-        let service = Service::new(Duration::from_secs(3), 0.0, String::new(), exchange_client);
+        let service = Service::new(Duration::from_secs(TIMEOUT), 0.0, String::new(), String::new(), exchange_client);
         service.run().await.expect_err("Withdraw failed!");
         Ok(())
     }

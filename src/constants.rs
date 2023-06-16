@@ -11,3 +11,5 @@ pub const URL_WITHDRAWAL: &str = "/api/v5/asset/withdrawal";
 pub const RECIPIENT_ADDR_1: &str = "17DKe3kkkkiiiiTvAKKi2vMPbm1Bz3CMKw";
 #[allow(unused)]
 pub const RECIPIENT_ADDR_2: &str = "17DKe3kkkkiiiiTvAKKi2vMPbm1Bz3CMKw";
+
+pub const TIMEOUT: u64 = 3;
