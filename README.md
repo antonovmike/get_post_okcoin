@@ -22,7 +22,7 @@ $ source $HOME/.cargo/env
 $ rustup component add rustfmt
 ```
 
-- When building the [`master`](https://github.com/antonovmike/get_post_okcoin/tree/main) branch, ensure you are using the latest stable release:
+- When building the [`main`](https://github.com/antonovmike/get_post_okcoin/tree/main) branch, ensure you are using the latest stable release:
 
 ```bash
 $ rustup update
