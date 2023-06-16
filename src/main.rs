@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let secret = "fake_secret_key".to_string();
     let passphrase = "fake_password".to_string();
 
-    let okcoin_client = OkCoinClient::new(api_key.clone(), passphrase.clone(), url_base.clone(), secret.clone());
+    let okcoin_client = OkCoinClient::new(api_key, passphrase, url_base, secret);
 
     let service = Service::new(timeout, threshold, address.clone(), okcoin_client.clone());
 
