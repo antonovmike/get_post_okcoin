@@ -150,8 +150,9 @@ impl OkCoinClient {
     }
 }
 
+#[async_trait]
 impl ExchangeClient for OkCoinClient {
-    fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
+    async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
         let _ = self.api_key;
         let _ = self.passphrase;
         let _ = self.url_base;
@@ -159,7 +160,7 @@ impl ExchangeClient for OkCoinClient {
         Self::timestamp();
         Ok(0.0)
     }
-    fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
+    async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
         let _ = self.api_key;
         let _ = self.passphrase;
         let _ = self.url_base;
@@ -177,12 +178,12 @@ mod test {
         balance: f64,
         withdraw_success: bool,
     }
-
+    #[async_trait]
     impl ExchangeClient for MockingClient {
-        fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
+        async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
             Ok(self.balance)
         }
-        fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
+        async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
             if self.withdraw_success {
                 Ok(())
             } else {
