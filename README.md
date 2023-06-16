@@ -31,7 +31,7 @@ $ rustup update
 ### 2. Clone the source repository:
 
 ```bash
-$ git clone --depth=1 https://github.com/antonovmike/get_post_okcoin.git
+$ git clone https://github.com/antonovmike/get_post_okcoin.git
 $ cd stacks-blockchain
 ```
 
@@ -39,4 +39,12 @@ $ cd stacks-blockchain
 
 ```bash
 $ cargo build
+```
+
+## Testing
+
+**Run the tests:**
+
+```bash
+$ cargo test
 ```
