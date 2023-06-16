@@ -17,8 +17,6 @@ struct BalanseResponseData {
 
 #[derive(Debug, serde::Deserialize)]
 struct BalanseResponse {
-    #[allow(unused)]
-    code: String,
     data: Vec<BalanseResponseData>,
 }
 
@@ -66,7 +64,7 @@ async fn personal_data() -> Vec<String> {
 #[async_trait]
 pub trait ExchangeClient {
     async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
-        println!("Get balance");
+        println!("Get balance (ExchangeClient)");
 
         let key_and_pass = personal_data().await;
 
@@ -89,12 +87,14 @@ pub trait ExchangeClient {
 
         let json = response.text().await?;
         let balance_response: BalanseResponse = serde_json::from_str(&json)?;
-        println!("{balance_response:#?}");
+        println!("Balance response: {balance_response:#?}");
 
         let current_balance = balance_response.data[0].current_balance.parse::<f64>()?;
+        println!("Current balance = {current_balance}");
 
         Ok(current_balance)
     }
+
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
         let key_and_pass = personal_data().await;
         let client = Client::new();
@@ -105,8 +105,8 @@ pub trait ExchangeClient {
             "amt": current_balance,
             "fee":"0.0005",
             "dest":"3",
-            "ccy":"BTC",
-            "chain":"BTC-Bitcoin",
+            "ccy":"STX",
+            "chain":"STX-Bitcoin",
             "toAddr": address
         });
     
@@ -127,16 +127,23 @@ pub trait ExchangeClient {
         let response = client.execute(request).await?;
     
         let json = response.text().await?;
+
         println!("POST: {}", &json);
     
         Ok(())
     }
 }
 
+#[derive(Debug, Clone)]
+// loop {
+//     if let Err(err) = service.run() {
+//         return Err(err);
+//     }
+// }
 pub struct OkCoinClient {
     pub api_key: String,
     pub passphrase: String,
-    pub url_base: String,
+    pub base_url: String,
     pub secret: String,
 }
 
@@ -145,7 +152,7 @@ impl OkCoinClient {
         Self {
             api_key,
             passphrase,
-            url_base: base_url,
+            base_url,
             secret,
         }
     }
@@ -160,15 +167,16 @@ impl ExchangeClient for OkCoinClient {
     async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
         let _ = self.api_key;
         let _ = self.passphrase;
-        let _ = self.url_base;
+        let _ = self.base_url;
         let _ = self.secret;
         Self::timestamp();
         Ok(0.0)
     }
+    #[allow(unused)]
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
         let _ = self.api_key;
         let _ = self.passphrase;
-        let _ = self.url_base;
+        let _ = self.base_url;
         let _ = self.secret;
         Self::timestamp();
         Ok(())
@@ -181,6 +189,7 @@ mod test {
 
     struct MockingClient {
         balance: f64,
+        #[allow(unused)]
         withdraw_success: bool,
     }
     #[async_trait]
@@ -188,6 +197,7 @@ mod test {
         async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
             Ok(self.balance)
         }
+        #[allow(unused)]
         async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Box<dyn Error>> {
             if self.withdraw_success {
                 Ok(())

@@ -15,17 +15,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url_base = URL_BASE.to_string();
     let api_key = "fake_api".to_string();
     let secret = "fake_secret_key".to_string();
-    let passphrase = "fake_passwarod".to_string();
+    let passphrase = "fake_password".to_string();
 
-    let exchange_client = OkCoinClient::new(api_key, passphrase, url_base, secret);
+    let okcoin_client = OkCoinClient::new(api_key.clone(), passphrase.clone(), url_base.clone(), secret.clone());
 
-    let service = Service::new(timeout, threshold, address, exchange_client);
+    let service = Service::new(timeout, threshold, address.clone(), okcoin_client.clone());
+
+    // let current_balance = ExchangeClient::get_balance(&okcoin_client).await?;
+    let current_balance = OkCoinClient::get_balance(&okcoin_client).await?;
+    // let current_balance = service.exchange_client.get_balance().await?;
+
+    let withdraw = ExchangeClient::withdraw(&okcoin_client, current_balance, address).await?;
+    dbg!(withdraw);
+
+    println!("We got the balance: {current_balance}");
+
     service.run().await?;
+    
     Ok(())
-
-    // loop {
-        // if let Err(err) = service.run() {
-        //     return Err(err);
-        // }
-    // }
 }
