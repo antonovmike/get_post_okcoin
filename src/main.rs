@@ -20,11 +20,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let exchange_client = OkCoinClient::new(api_key, passphrase, url_base, secret);
 
     let service = Service::new(timeout, threshold, address, exchange_client);
-    // service.run();
+    service.run().await?;
+    Ok(())
 
-    loop {
-        if let Err(err) = service.run() {
-            return Err(err);
-        }
-    }
+    // loop {
+        // if let Err(err) = service.run() {
+        //     return Err(err);
+        // }
+    // }
 }

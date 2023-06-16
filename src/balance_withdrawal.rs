@@ -6,7 +6,6 @@ use base64::engine::{general_purpose, Engine};
 use hmac_sha256::HMAC;
 use reqwest::Client;
 use serde_json::json;
-// use tokio::time::Timeout;
 
 use crate::constants::*;
 
@@ -33,6 +32,7 @@ pub struct Service<EC: ExchangeClient> {
 
 impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
     pub fn new(timeout: Duration, threshold: f64, address: String, exchange_client: EC) -> Self {
+        println!("New Service ceated");
         Self {
             timeout,
             threshold,
@@ -41,9 +41,9 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
         }
     }
 
-    pub fn run(&self) -> Result<(), Box<dyn Error>> {
-        if self.exchange_client.get_balance()? > Box::pin(self.threshold) {
-            self.exchange_client.withdraw(self.address.clone())?
+    pub async fn run(&self) -> Result<(), Box<dyn Error>> {
+        if self.exchange_client.get_balance().await? > self.threshold {
+            self.exchange_client.withdraw(0.0, self.address.clone()).await?
         }
 
         std::thread::sleep(self.timeout);
@@ -53,6 +53,8 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
 }
 
 async fn personal_data() -> Vec<String> {
+    println!("Personal data");
+
     let api_key = dotenv::var("OKCOIN_API_KEY").expect("OKCOIN_API_KEY not found");
     let api_secret = dotenv::var("OKCOIN_API_SECRET").expect("OKCOIN_API_SECRET not found");
     let passphrase = dotenv::var("OKCOIN_PASS_PHRASE").expect("OKCOIN_PASS_PHRASE not found");
@@ -64,6 +66,8 @@ async fn personal_data() -> Vec<String> {
 #[async_trait]
 pub trait ExchangeClient {
     async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
+        println!("Get balance");
+
         let key_and_pass = personal_data().await;
 
         let client = Client::new();
@@ -145,8 +149,9 @@ impl OkCoinClient {
             secret,
         }
     }
-    fn timestamp() {
-        todo!()
+    fn timestamp() -> String {
+        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+        timestamp.to_string()
     }
 }
 
@@ -195,8 +200,8 @@ mod test {
         }
     }
 
-    #[test]
-    fn success() {
+    #[tokio::test]
+    async fn success() -> Result<(), Box<dyn Error>> {
         let exchange_client = MockingClient {
             balance: 100.0,
             withdraw_success: true,
@@ -204,11 +209,12 @@ mod test {
         let service = Service::new(
             Duration::from_secs(3), 0.0, String::new(), exchange_client
         );
-        service.run().expect("Success!");
+        service.run().await.expect("Success!");
+        Ok(())
     }
 
-    #[test]
-    fn withdraw_fail() {
+    #[tokio::test]
+    async fn withdraw_fail() -> Result<(), Box<dyn Error>> {
         let exchange_client = MockingClient {
             balance: 100.0,
             withdraw_success: false,
@@ -216,6 +222,7 @@ mod test {
         let service = Service::new(
             Duration::from_secs(3), 0.0, String::new(), exchange_client
         );
-        service.run().expect_err("Withdraw failed!");
+        service.run().await.expect_err("Withdraw failed!");
+        Ok(())
     }
 }
