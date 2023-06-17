@@ -1,44 +1,37 @@
-use std::thread;
 use std::time::Duration;
 use reqwest::Client;
 
 use constants::*;
+
+use crate::balance_withdrawal::*;
 
 mod balance_withdrawal;
 mod constants;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut account_counter = 2;
+    let timeout = Duration::from_secs(TIMEOUT);
+    let threshold = 100.0;
+    let address_1 = RECIPIENT_ADDR_1.to_string();
+    let address_2 = RECIPIENT_ADDR_2.to_string();
+    let url_base = URL_BASE.to_string();
+    let api_key = "fake_api".to_string();
+    let secret = "fake_secret_key".to_string();
+    let passphrase = "fake_password".to_string();
 
-    loop {
-        let ok_click = balance_withdrawal::OkClick {
-            access_key: dotenv::var("OKCOIN_API_KEY").expect("OKCOIN_API_KEY not found"),
-            passhphrase: dotenv::var("OKCOIN_PASS_PHRASE").expect("OKCOIN_PASS_PHRASE not found"),
-            base_url: URL_BASE.to_string(),
-            http_client: Client::new(),
-        };
-        let _current_balance = balance_withdrawal::XClient::get_balance(&ok_click);
-        let current_balance = 0.1;
+    let okcoin_client = OkCoinClient::new(api_key, passphrase, url_base, secret);
 
-        let address = balance_withdrawal::Address {
-            recipient_addr_1: RECIPIENT_ADDR_1.to_string(),
-            recipient_addr_2: RECIPIENT_ADDR_2.to_string(),
-        };
+    let service = Service::new(timeout, threshold, address_1.clone(), address_2.clone(), okcoin_client.clone());
 
-        if current_balance >= AMOUNT {
-            if account_counter == 2 {
-                balance_withdrawal::XClient::withdrawal(&ok_click, current_balance, address.recipient_addr_1).await?;
-                account_counter = 1
-            } else {
-                balance_withdrawal::XClient::withdrawal(&ok_click, current_balance, address.recipient_addr_2).await?;
-                account_counter = 2
-            }
-        }
+    // let current_balance = ExchangeClient::get_balance(&okcoin_client).await?;
+    let current_balance = OkCoinClient::get_balance(&okcoin_client).await?;
+    // let current_balance = service.exchange_client.get_balance().await?;
 
-        thread::sleep(Duration::from_secs(3));
-    }
+    OkCoinClient::withdraw(&okcoin_client, current_balance, address_1).await?;
 
-    #[allow(unused)]
+    println!("\nWe got the balance: {current_balance}\n");
+
+    service.run().await?;
+    
     Ok(())
 }
