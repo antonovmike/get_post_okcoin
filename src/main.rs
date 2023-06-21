@@ -4,6 +4,7 @@ mod service;
 use std::{time::Duration, fs::File, io::Read};
 
 use anyhow::{Result, anyhow};
+use clap::Parser;
 use serde::Deserialize;
 
 use client::OkCoinClient;
@@ -38,11 +39,19 @@ impl Config {
     }
 }
 
+#[derive(Debug, Parser)]
+#[clap(version)]
+struct Args {
+    /// Path to config file
+    config: String,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
+    let args = Args::parse();
     env_logger::try_init().map_err(|e| anyhow!("logger setup error: {e}"))?;
 
-    let config = Config::from_file("Config.toml")?;
+    let config = Config::from_file(&args.config)?;
     log::debug!("running with config: {config:?}");
     let okcoin_client = OkCoinClient::new(config.api_key, config.passphrase, config.secret);
 
