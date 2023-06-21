@@ -9,6 +9,8 @@ use serde_json::json;
 
 use anyhow::{Result, anyhow};
 
+use env_logger::Builder;
+
 use crate::constants::*;
 
 /// Two structs for deserializing a JSON response containing balance data.
@@ -80,6 +82,10 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
     /// initializing its fields with the provided arguments.
     pub fn new(timeout: Duration, threshold: f64, address_1: String, address_2: String, exchange_client: EC) -> Self {
         println!("New Service ceated");
+        Builder::new().init();
+        log::info!("logger TEST");
+        log::warn!("warning TEST");
+        log::error!("error TEST");
         Self {
             timeout,
             threshold,

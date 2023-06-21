@@ -17,3 +17,5 @@ help = "0.0.0"
 serde = { version = "1.0.163", features = ["derive"] }
 async-trait = "0.1.68"
 anyhow = "1.0.71"
+env_logger = "0.10.0"
+log = "0.4.19"
