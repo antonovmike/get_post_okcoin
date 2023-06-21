@@ -63,3 +63,8 @@ cargo run --bin get_post_okcoin
 ```bash
 $ cargo test
 ```
+
+Debug:
+```bash
+RUST_LOG=debug cargo run
+```
