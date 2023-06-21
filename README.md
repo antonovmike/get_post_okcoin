@@ -51,6 +51,11 @@ $ cd stacks-blockchain
 $ cargo build
 ```
 
+### 3. Run the binary
+```bash
+cargo run --bin get_post_okcoin
+```
+
 ## Testing
 
 **Run the tests:**

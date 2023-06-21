@@ -1,5 +1,5 @@
 use std::time::Duration;
-use reqwest::Client;
+// use reqwest::Client;
 
 use constants::*;
 
