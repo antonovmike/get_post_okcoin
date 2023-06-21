@@ -67,16 +67,8 @@ impl OkCoinClient {
 /// of error that implements the `Error` trait, which allows for more flexibility in handling errors.
 #[async_trait]
 pub trait ExchangeClient {
-    async fn get_balance(&self) -> Result<f64> {
-        Ok(270.0) // fake balance
-    }
-    async fn withdraw(
-        &self,
-        _current_balance: f64,
-        _address: String,
-    ) -> Result<()> {
-        Ok(())
-    }
+    async fn get_balance(&self) -> Result<f64>;
+    async fn withdraw(&self, current_balance: f64, address: String, ) -> Result<()>;
 }
 
 /// The above code is implementing the `ExchangeClient` trait for the `OkCoinClient` struct. It
@@ -188,3 +180,58 @@ async fn personal_data() -> Vec<String> {
     let api_and_pass = vec![api_key, api_secret, passphrase];
     api_and_pass
 }
+
+
+// #[cfg(test)]
+// mod test {
+//     use super::*;
+
+//     struct MockingClient {
+//         balance: f64,
+//         #[allow(unused)]
+//         withdraw_success: bool,
+//     }
+//     #[async_trait]
+//     impl ExchangeClient for MockingClient {
+//         async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
+//             Ok(self.balance)
+//         }
+//         #[allow(unused)]
+//         async fn withdraw(
+//             &self,
+//             current_balance: f64,
+//             address: String,
+//         ) -> Result<(), Box<dyn Error>> {
+//             if self.withdraw_success {
+//                 Ok(())
+//             } else {
+//                 Err(Box::new(std::io::Error::new(
+//                     std::io::ErrorKind::AddrInUse,
+//                     "TEST".to_string(),
+//                 )))
+//             }
+//         }
+//     }
+
+//     #[tokio::test]
+//     async fn success() -> Result<(), Box<dyn Error>> {
+//         let exchange_client = MockingClient {
+//             balance: 100.0,
+//             withdraw_success: true,
+//         };
+//         let service = Service::new(Duration::from_secs(TIMEOUT), 0.0, String::new(), String::new(), exchange_client);
+//         service.run().await.expect("Success!");
+//         Ok(())
+//     }
+
+//     #[tokio::test]
+//     async fn withdraw_fail() -> Result<(), Box<dyn Error>> {
+//         let exchange_client = MockingClient {
+//             balance: 100.0,
+//             withdraw_success: false,
+//         };
+//         let service = Service::new(Duration::from_secs(TIMEOUT), 0.0, String::new(), String::new(), exchange_client);
+//         service.run().await.expect_err("Withdraw failed!");
+//         Ok(())
+//     }
+// }
