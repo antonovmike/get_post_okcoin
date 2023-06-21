@@ -59,7 +59,7 @@ async fn main() -> Result<()> {
         config.timeout, config.threshold, config.address_1, config.address_2, okcoin_client
     );
 
-    service.run().await.map_err(|e| anyhow!("{e}"))
+    service.run().await
 }
 
 const fn default_timeout() -> Duration {

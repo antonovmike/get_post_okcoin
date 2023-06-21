@@ -1,4 +1,3 @@
-use std::error::Error;
 use std::time::Duration;
 
 #[allow(unused)]
@@ -75,7 +74,7 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
 /// 
 /// a `Result` type with an empty `Ok` value and an error type of `Box<dyn Error>`. However, the code
 /// after the loop is unreachable, so it will never be executed.
-    pub async fn run(&self) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self) -> Result<()> {
         let mut account_counter = 2;
 
         loop {
