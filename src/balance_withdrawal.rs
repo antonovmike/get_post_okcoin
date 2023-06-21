@@ -6,7 +6,7 @@ use base64::engine::{general_purpose, Engine};
 use hmac_sha256::HMAC;
 use reqwest::Client;
 use serde_json::json;
-
+#[allow(unused)]
 use anyhow::{Result, anyhow};
 
 use env_logger::Builder;
@@ -83,9 +83,9 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
     pub fn new(timeout: Duration, threshold: f64, address_1: String, address_2: String, exchange_client: EC) -> Self {
         println!("New Service ceated");
         Builder::new().init();
-        log::info!("logger TEST");
-        log::warn!("warning TEST");
-        log::error!("error TEST");
+        log::info!("info");
+        log::warn!("warning");
+        log::error!("error");
         Self {
             timeout,
             threshold,
@@ -94,7 +94,6 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
             exchange_client,
         }
     }
-
 
 /// Thi function continuously checks the balance of an exchange client and withdraws funds if 
 /// if the balance is above a certain threshold.
