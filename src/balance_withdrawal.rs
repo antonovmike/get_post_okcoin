@@ -7,7 +7,7 @@ use hmac_sha256::HMAC;
 use reqwest::Client;
 use serde_json::json;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 
 use crate::constants::*;
 
@@ -308,20 +308,16 @@ mod test {
             current_balance: f64,
             address: String,
         ) -> Result<()> {
-            // if self.withdraw_success {
-            //     Ok(())
-            // } else {
-            //     Err(Box::new(std::io::Error::new(
-            //         std::io::ErrorKind::AddrInUse,
-            //         "TEST".to_string(),
-            //     )))
-            // }
-            Ok(()) // FIX IT
+            if self.withdraw_success {
+                Ok(())
+            } else {
+                Err(anyhow!("Withdrawal failed"))
+            }
         }
     }
 
     #[tokio::test]
-    async fn success() -> Result<(), Box<dyn Error>> {
+    async fn success() -> Result<()> { // FIT IT
         let exchange_client = MockingClient {
             balance: 100.0,
             withdraw_success: true,
@@ -332,7 +328,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn withdraw_fail() -> Result<(), Box<dyn Error>> {
+    async fn withdraw_fail() -> Result<()> {
         let exchange_client = MockingClient {
             balance: 100.0,
             withdraw_success: false,
