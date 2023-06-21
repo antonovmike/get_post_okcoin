@@ -11,7 +11,7 @@ use service::Service;
 
 #[derive(Debug, Deserialize)]
 struct Config {
-    #[serde(default="default_timeout")]
+    #[serde(default="default_timeout", with="humantime_serde")]
     timeout: Duration,
     threshold: f64,
     address_1: String,
@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
     env_logger::try_init().map_err(|e| anyhow!("logger setup error: {e}"))?;
 
     let config = Config::from_file("Config.toml")?;
-
+    log::debug!("running with config: {config:?}");
     let okcoin_client = OkCoinClient::new(config.api_key, config.passphrase, config.secret);
 
     let service = Service::new(

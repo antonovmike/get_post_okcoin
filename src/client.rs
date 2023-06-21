@@ -85,18 +85,16 @@ impl ExchangeClient for OkCoinClient {
     /// value is wrapped in an `Ok` variant if the function executes successfully, otherwise it returns a
     /// `Box<dyn Error>` wrapped in an `Err` variant.
     async fn get_balance(&self) -> Result<f64> {
-        let key_and_pass = personal_data().await;
-
         let client = Client::new();
 
         let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
         let message = format!("{timestamp}GET{}", Self::URL_BALANCE);
-        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
+        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &self.secret));
 
         let request = client
             .get(format!("{}{}", Self::URL_BASE, Self::URL_BALANCE))
-            .header("OK-ACCESS-KEY", &key_and_pass[0])
-            .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
+            .header("OK-ACCESS-KEY", &self.api_key)
+            .header("OK-ACCESS-PASSPHRASE", &self.passphrase)
             .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
             .header("Content-Type", "application/json")
             .header("OK-ACCESS-SIGN", sign.clone())
@@ -129,7 +127,6 @@ impl ExchangeClient for OkCoinClient {
     /// object as the error value.
 
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<()> {
-        let key_and_pass = personal_data().await;
         let client = Client::new();
 
         let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
@@ -144,16 +141,16 @@ impl ExchangeClient for OkCoinClient {
         });
 
         let message = format!("{timestamp}POST{}{body}", Self::URL_WITHDRAWAL);
-        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &key_and_pass[1]));
+        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &self.secret));
 
         let request = client
             .post(format!("{}{}", Self::URL_BASE, Self::URL_WITHDRAWAL))
             .header("accept", "application/json")
             .header("CONTENT-TYPE", "application/json")
-            .header("OK-ACCESS-KEY", &key_and_pass[0])
+            .header("OK-ACCESS-KEY", &self.api_key)
             .header("OK-ACCESS-SIGN", sign)
             .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
-            .header("OK-ACCESS-PASSPHRASE", &key_and_pass[2])
+            .header("OK-ACCESS-PASSPHRASE", &self.passphrase)
             .body(body.to_string())
             .build()?;
 
@@ -166,21 +163,6 @@ impl ExchangeClient for OkCoinClient {
         Ok(())
     }
 }
-
-/// This function retrieves personal data from an API using environment variables.
-///
-/// Returns:
-///
-/// A vector of strings containing the API key, API secret, and passphrase for the OKCoin API.
-async fn personal_data() -> Vec<String> {
-    let api_key = dotenv::var("OKCOIN_API_KEY").expect("OKCOIN_API_KEY not found");
-    let api_secret = dotenv::var("OKCOIN_API_SECRET").expect("OKCOIN_API_SECRET not found");
-    let passphrase = dotenv::var("OKCOIN_PASS_PHRASE").expect("OKCOIN_PASS_PHRASE not found");
-
-    let api_and_pass = vec![api_key, api_secret, passphrase];
-    api_and_pass
-}
-
 
 // #[cfg(test)]
 // mod test {
