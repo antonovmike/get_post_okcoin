@@ -53,6 +53,7 @@ async fn main() -> Result<()> {
 
     let config = Config::from_file(&args.config)?;
     log::debug!("running with config: {config:?}");
+
     let okcoin_client = OkCoinClient::new(config.api_key, config.passphrase, config.secret);
 
     let service = Service::new(

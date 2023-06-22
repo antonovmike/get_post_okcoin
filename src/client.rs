@@ -164,56 +164,58 @@ impl ExchangeClient for OkCoinClient {
     }
 }
 
-// #[cfg(test)]
-// mod test {
-//     use super::*;
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+    use anyhow::anyhow;
 
-//     struct MockingClient {
-//         balance: f64,
-//         #[allow(unused)]
-//         withdraw_success: bool,
-//     }
-//     #[async_trait]
-//     impl ExchangeClient for MockingClient {
-//         async fn get_balance(&self) -> Result<f64, Box<dyn Error>> {
-//             Ok(self.balance)
-//         }
-//         #[allow(unused)]
-//         async fn withdraw(
-//             &self,
-//             current_balance: f64,
-//             address: String,
-//         ) -> Result<(), Box<dyn Error>> {
-//             if self.withdraw_success {
-//                 Ok(())
-//             } else {
-//                 Err(Box::new(std::io::Error::new(
-//                     std::io::ErrorKind::AddrInUse,
-//                     "TEST".to_string(),
-//                 )))
-//             }
-//         }
-//     }
+    use crate::service::Service;
 
-//     #[tokio::test]
-//     async fn success() -> Result<(), Box<dyn Error>> {
-//         let exchange_client = MockingClient {
-//             balance: 100.0,
-//             withdraw_success: true,
-//         };
-//         let service = Service::new(Duration::from_secs(TIMEOUT), 0.0, String::new(), String::new(), exchange_client);
-//         service.run().await.expect("Success!");
-//         Ok(())
-//     }
+    use super::*;
 
-//     #[tokio::test]
-//     async fn withdraw_fail() -> Result<(), Box<dyn Error>> {
-//         let exchange_client = MockingClient {
-//             balance: 100.0,
-//             withdraw_success: false,
-//         };
-//         let service = Service::new(Duration::from_secs(TIMEOUT), 0.0, String::new(), String::new(), exchange_client);
-//         service.run().await.expect_err("Withdraw failed!");
-//         Ok(())
-//     }
-// }
+    struct MockingClient {
+        balance: f64,
+        #[allow(unused)]
+        withdraw_success: bool,
+    }
+    #[async_trait]
+    impl ExchangeClient for MockingClient {
+        async fn get_balance(&self) -> Result<f64> {
+            Ok(self.balance)
+        }
+        #[allow(unused)]
+        async fn withdraw(
+            &self,
+            current_balance: f64,
+            address: String,
+        ) -> Result<()> {
+            if self.withdraw_success {
+                Ok(())
+            } else {
+                Err(anyhow!("Withdrawal failed")) // FIX IT
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn success() -> Result<()> {
+        let exchange_client = MockingClient {
+            balance: 100.0,
+            withdraw_success: true,
+        };
+        let service = Service::new(Duration::from_secs(3), 0.0, String::new(), String::new(), exchange_client);
+        service.run().await.expect("Success!");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn withdraw_fail() -> Result<()> {
+        let exchange_client = MockingClient {
+            balance: 100.0,
+            withdraw_success: false,
+        };
+        let service = Service::new(Duration::from_secs(3), 0.0, String::new(), String::new(), exchange_client);
+        service.run().await.expect_err("Withdraw failed!");
+        Ok(())
+    }
+}
