@@ -1,4 +1,5 @@
 use std::time::Duration;
+use tokio::time::sleep;
 
 #[allow(unused)]
 use anyhow::{Result, anyhow};
@@ -94,7 +95,7 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
                 }
             }
 
-            std::thread::sleep(self.timeout);
+            sleep(Duration::from_secs(3)).await;
         }
         #[allow(unused)]
         Ok(())
