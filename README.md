@@ -44,7 +44,7 @@ $ rustup update
 
 ```bash
 $ git clone https://github.com/antonovmike/get_post_okcoin.git
-$ cd stacks-blockchain
+$ cd get_post_okcoin
 ```
 
 ### 3. Run the project
