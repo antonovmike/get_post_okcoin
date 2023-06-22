@@ -1,36 +1,68 @@
-use std::time::Duration;
+mod client;
+mod service;
 
-use constants::*;
+use std::{time::Duration, fs::File, io::Read};
 
-use crate::balance_withdrawal::*;
+use anyhow::{Result, anyhow};
+use clap::Parser;
+use serde::Deserialize;
 
-mod balance_withdrawal;
-mod constants;
+use client::OkCoinClient;
+use service::Service;
+
+#[derive(Debug, Deserialize)]
+struct Config {
+    #[serde(default="default_timeout", with="humantime_serde")]
+    timeout: Duration,
+    threshold: f64,
+    address_1: String,
+    address_2: String,
+    api_key: String,
+    secret: String,
+    passphrase: String,
+}
+
+impl Config {
+    fn from_file(path: &str) -> Result<Self> {
+        let mut toml = String::new();
+        File::open(path).map_err(|e| {
+            log::error!("Failed open config file \"{path}\": {e}");
+            anyhow!("Failed open config file \"{path}\": {e}")
+        })?.read_to_string(&mut toml).map_err(|e| {
+            log::error!("Failed to read config file \"{path}\": {e}");
+            anyhow!("Failed to read config file \"{path}\": {e}")
+        })?;
+        toml::from_str(&toml).map_err(|e| {
+            log::error!("config parse failed: {e}");
+            anyhow!("config parse failed: {e}")
+        })
+    }
+}
+
+#[derive(Debug, Parser)]
+#[clap(version)]
+struct Args {
+    /// Path to config file
+    config: String,
+}
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let timeout = Duration::from_secs(TIMEOUT);
-    let threshold = 100.0;
-    let address_1 = RECIPIENT_ADDR_1.to_string();
-    let address_2 = RECIPIENT_ADDR_2.to_string();
-    let url_base = URL_BASE.to_string();
-    let api_key = "fake_api".to_string();
-    let secret = "fake_secret_key".to_string();
-    let passphrase = "fake_password".to_string();
+async fn main() -> Result<()> {
+    let args = Args::parse();
+    env_logger::try_init().map_err(|e| anyhow!("logger setup error: {e}"))?;
 
-    let okcoin_client = OkCoinClient::new(api_key, passphrase, url_base, secret);
+    let config = Config::from_file(&args.config)?;
+    log::debug!("running with config: {config:?}");
 
-    let service = Service::new(timeout, threshold, address_1.clone(), address_2.clone(), okcoin_client.clone());
+    let okcoin_client = OkCoinClient::new(config.api_key, config.passphrase, config.secret);
 
-    // let current_balance = ExchangeClient::get_balance(&okcoin_client).await?;
-    let current_balance = OkCoinClient::get_balance(&okcoin_client).await?;
-    // let current_balance = service.exchange_client.get_balance().await?;
+    let service = Service::new(
+        config.timeout, config.threshold, config.address_1, config.address_2, okcoin_client
+    );
 
-    // OkCoinClient::withdraw(&okcoin_client, current_balance, address_1).await?;
+    service.run().await
+}
 
-    println!("\nWe got the balance: {current_balance}\n");
-
-    service.run().await?;
-    
-    Ok(())
+const fn default_timeout() -> Duration {
+    Duration::from_secs(3)
 }

@@ -45,10 +45,9 @@ $ git clone https://github.com/antonovmike/get_post_okcoin.git
 $ cd stacks-blockchain
 ```
 
-### 3. Build the project
-
+### 3. Run the project
 ```bash
-$ cargo build
+cargo run -- config.toml
 ```
 
 ### 3. Run the binary
@@ -62,4 +61,9 @@ cargo run --bin get_post_okcoin
 
 ```bash
 $ cargo test
+```
+
+Debug:
+```bash
+RUST_LOG=debug cargo run -- config.toml
 ```
