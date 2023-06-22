@@ -10,14 +10,16 @@ There should be configurable options:
 
 [okcoin API](https://www.okcoin.com/docs-v5/)
 
-**Your account details**
-
-Personal data (key, secret key and password) are stored in the ".env" file. For example:
+**Config.toml example**
 
 ```bash
-OKCOIN_API_KEY=u1uuuu1u-1111-1u11-11u1-111uu1111111
-OKCOIN_API_SECRET=V48T709QV84YTS9YSE9
-OKCOIN_PASS_PHRASE=your_password
+timeout = "4s"
+threshold = 100.3
+address_1 = "Recipient's address 1"
+address_2 = "Recipient's address 1"
+api_key = "your-api-key"
+secret = "YOURSECRETKEY"
+passphrase = "yourpassphrase"
 ```
 
 ## Building
@@ -48,6 +50,11 @@ $ cd stacks-blockchain
 ### 3. Run the project
 ```bash
 cargo run -- config.toml
+```
+
+### 3. Run the binary
+```bash
+cargo run --bin get_post_okcoin
 ```
 
 ## Testing
