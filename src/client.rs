@@ -175,7 +175,6 @@ mod test {
 
     struct MockingClient {
         balance: f64,
-        #[allow(unused)]
         withdraw_success: bool,
     }
     #[async_trait]
@@ -192,7 +191,7 @@ mod test {
             if self.withdraw_success {
                 Ok(())
             } else {
-                Err(anyhow!("Withdrawal failed")) // FIX IT
+                Err(anyhow!("Withdrawal failed"))
             }
         }
     }
@@ -200,13 +199,13 @@ mod test {
     #[tokio::test]
     async fn success() -> Result<()> {
         let exchange_client = MockingClient {
-            balance: 100.0,
+            balance: 100.1,
             withdraw_success: true,
         };
         let service = Service::new(Duration::from_secs(3), 0.0, String::new(), String::new(), exchange_client);
         service.run().await.expect("Success!");
         Ok(())
-    }
+    } // FIX IT
 
     #[tokio::test]
     async fn withdraw_fail() -> Result<()> {
