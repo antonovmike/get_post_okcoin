@@ -109,7 +109,6 @@ impl ExchangeClient for OkCoinClient {
         let current_balance = balance_response.data[0].current_balance.parse::<f64>()?;
         log::info!("Current balance = {current_balance}");
 
-        let current_balance = 200.4; // fake balance
         Ok(current_balance)
     }
 
