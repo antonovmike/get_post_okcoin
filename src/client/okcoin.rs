@@ -27,7 +27,37 @@ trait Request: Serialize {
 struct BalanceRequest {}
 
 #[derive(Debug, Deserialize)]
-struct BalanceResponse {}
+struct BalanceResponse {
+    #[serde[deserialize_with = "serde_from_str", rename = "uTime"]]
+    u_time: u64,
+    #[serde[deserialize_with = "serde_from_str", rename = "totalEq"]]
+    total_eq: f64,
+    details: Vec<BalanceDetailedInfo>,
+}
+
+#[derive(Debug, Deserialize)]
+struct BalanceDetailedInfo {
+    #[serde[rename = "ccy"]]
+    currency: String,
+    #[serde[deserialize_with = "serde_from_str"]]
+    eq: f64,
+    #[serde[deserialize_with = "serde_from_str", rename = "cashBal"]]
+    cash_balance: f64,
+    #[serde[deserialize_with = "serde_from_str", rename = "uTime"]]
+    u_time: u64,
+    #[serde[deserialize_with = "serde_from_str", rename = "disEq"]]
+    discount_eq: f64,
+    #[serde[deserialize_with = "serde_from_str", rename = "availBal"]]
+    available_balance: f64,
+    #[serde[deserialize_with = "serde_from_str", rename = "frozenBal"]]
+    frozen_balance: f64,
+    #[serde[deserialize_with = "serde_from_str", rename = "ordFrozen"]]
+    frozen_in_orders: f64,
+    #[serde[deserialize_with = "serde_from_str", rename = "eqUsd"]]
+    eq_usd: f64,
+    #[serde[deserialize_with = "serde_from_str", rename = "stgyEq"]]
+    strategy_eq: f64,
+}
 
 impl Request for BalanceRequest {
     const URL_PATH: &'static str = "/api/v5/account/balance";
@@ -150,7 +180,16 @@ impl ExchangeClient for OkCoinClient {
     async fn get_balance(&self) -> Result<f64, Self::Err> {
         let resp = self.request(BalanceRequest {}).await?;
 
-        todo!()
+        log::debug!("Balance response: {resp:?}");
+
+        let balance = resp
+            .details
+            .iter()
+            .find(|d| d.currency == "STX")
+            .map(|bdi| bdi.eq)
+            .unwrap_or_default(); // or "STX-..."?
+
+        Ok(balance)
     }
 
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Self::Err> {

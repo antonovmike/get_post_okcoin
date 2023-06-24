@@ -59,7 +59,8 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
         // }
         // #[allow(unused)]
         // Ok(())
-        todo!()
+        self.exchange_client.get_balance().await?;
+        Ok(())
     }
 }
 
