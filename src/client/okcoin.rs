@@ -60,21 +60,35 @@ struct BalanceDetailedInfo {
 }
 
 impl Request for BalanceRequest {
-    const URL_PATH: &'static str = "/api/v5/account/balance";
+    const URL_PATH: &'static str = "account/balance";
     const HTTP_METHOD: Method = Method::GET;
     type Response = BalanceResponse;
 }
 
 #[derive(Debug, Serialize)]
-struct BalanceWithdrawal {
-    current_balance: f64, 
+struct WithdrawalRequest {
+    amount: f64, 
     address: String,
 }
 
-impl Request for BalanceWithdrawal {
-    const URL_PATH: &'static str = "/api/v5/asset/withdrawal";
+impl Request for WithdrawalRequest {
+    const URL_PATH: &'static str = "asset/withdrawal";
     const HTTP_METHOD: Method = Method::POST;
-    type Response = BalanceResponse;
+    type Response = WithdrawalResponse;
+}
+
+#[derive(Debug, Deserialize)]
+struct WithdrawalResponse {
+    #[serde[deserialize_with = "serde_from_str", rename = "uTime"]]
+    u_time: u64,
+    #[serde[deserialize_with = "serde_from_str", rename = "totalEq"]]
+    total_eq: f64,
+    #[serde[deserialize_with = "serde_to_str"]]
+    amt: f64,
+    wdId: String,
+    ccy: String,
+    clientId: String,
+    chain: String, // "STX-Bitcoin"
 }
 
 #[derive(Debug, Clone)]
@@ -86,9 +100,7 @@ pub struct OkCoinClient {
 }
 
 impl OkCoinClient {
-    const URL_BASE: &str = "https://www.okcoin.com";
-    // const URL_WITHDRAWAL: &str = "/api/v5/asset/withdrawal";
-
+    const URL_BASE: &str = "";
     pub fn new(api_key: String, passphrase: String, secret: String) -> Self {
         Self {
             api_key,
@@ -114,7 +126,7 @@ impl OkCoinClient {
 
         let request = self
             .client
-            .request(R::HTTP_METHOD, format!("{}{}", Self::URL_BASE, R::URL_PATH))
+            .request(R::HTTP_METHOD, format!("https://www.okcoin.com/api/v5/{}", R::URL_PATH))
             .header("OK-ACCESS-KEY", &self.api_key)
             .header("OK-ACCESS-PASSPHRASE", &self.passphrase)
             .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
@@ -186,6 +198,8 @@ where
     deserializer.deserialize_any(SerdeFromStr(PhantomData))
 }
 
+fn serde_to_str<D>(deserializer: &D) {}
+
 #[async_trait]
 impl ExchangeClient for OkCoinClient {
     type Err = OkCoinClientError;
@@ -205,7 +219,7 @@ impl ExchangeClient for OkCoinClient {
     }
 
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Self::Err> {
-        let reqw = self.request(BalanceWithdrawal {current_balance: current_balance, address: address}).await?;
+        let reqw = self.request(WithdrawalRequest {amount: current_balance, address: address}).await?;
 
         todo!()
     }
