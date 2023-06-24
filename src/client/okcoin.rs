@@ -65,6 +65,18 @@ impl Request for BalanceRequest {
     type Response = BalanceResponse;
 }
 
+#[derive(Debug, Serialize)]
+struct BalanceWithdrawal {
+    current_balance: f64, 
+    address: String,
+}
+
+impl Request for BalanceWithdrawal {
+    const URL_PATH: &'static str = "/api/v5/asset/withdrawal";
+    const HTTP_METHOD: Method = Method::POST;
+    type Response = BalanceResponse;
+}
+
 #[derive(Debug, Clone)]
 pub struct OkCoinClient {
     api_key: String,
@@ -193,6 +205,8 @@ impl ExchangeClient for OkCoinClient {
     }
 
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Self::Err> {
+        let reqw = self.request(BalanceWithdrawal {current_balance: current_balance, address: address}).await?;
+
         todo!()
     }
 }
