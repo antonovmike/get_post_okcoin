@@ -7,7 +7,7 @@ use anyhow::{anyhow, Result};
 use clap::Parser;
 use serde::Deserialize;
 
-use client::OkCoinClient;
+use client::okcoin::OkCoinClient;
 use service::Service;
 
 #[derive(Debug, Deserialize)]
