@@ -1,120 +1,108 @@
+use anyhow::Result;
 use async_trait::async_trait;
 use base64::engine::{general_purpose, Engine};
 use hmac_sha256::HMAC;
 use reqwest::Client;
+use reqwest::Method;
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_json::json;
-use anyhow::Result;
 
-#[derive(Debug, serde::Deserialize)]
-struct BalanseResponseData {
-    #[serde(rename = "totalEq")]
-    current_balance: String,
+trait Request: Serialize {
+    const URL_PATH: &'static str;
+    const HTTP_METHOD: Method;
+    type Response: DeserializeOwned;
 }
 
-#[derive(Debug, serde::Deserialize)]
-struct BalanseResponse {
-    data: Vec<BalanseResponseData>,
+#[derive(Debug, Serialize)]
+struct BalanceRequest {}
+
+#[derive(Debug, Deserialize)]
+struct BalanceResponse {}
+
+impl Request for BalanceRequest {
+    const URL_PATH: &'static str = "/api/v5/account/balance";
+    const HTTP_METHOD: Method = Method::GET;
+    type Response = BalanceResponse;
 }
 
 #[derive(Debug, Clone)]
 pub struct OkCoinClient {
-    pub api_key: String,
-    pub passphrase: String,
-    pub secret: String,
+    api_key: String,
+    passphrase: String,
+    secret: String,
+    client: Client,
 }
 
 impl OkCoinClient {
     const URL_BASE: &str = "https://www.okcoin.com";
-    const URL_BALANCE: &str = "/api/v5/account/balance?ccy=STX";
-    const URL_WITHDRAWAL: &str = "/api/v5/asset/withdrawal";
+    // const URL_WITHDRAWAL: &str = "/api/v5/asset/withdrawal";
 
     pub fn new(api_key: String, passphrase: String, secret: String) -> Self {
         Self {
             api_key,
             passphrase,
             secret,
+            client: Client::new(),
         }
+    }
+
+    async fn request<R: Request>(&self, request: R) -> Result<R::Response> {
+        #[derive(Debug, Deserialize)]
+        struct RawResponse {
+            #[serde(deserialize_with = "serde_from_str")]
+            code: u16,
+            msg: String,
+            // data: Vec<T>,
+        }
+
+        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
+        let body_json = serde_json::to_string(&request)?;
+        let message = format!("{timestamp}{}{}{}", R::HTTP_METHOD, R::URL_PATH, body_json);
+        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &self.secret));
+
+        let request = self
+            .client
+            .request(R::HTTP_METHOD, format!("{}{}", Self::URL_BASE, R::URL_PATH))
+            .header("OK-ACCESS-KEY", &self.api_key)
+            .header("OK-ACCESS-PASSPHRASE", &self.passphrase)
+            .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
+            .header("Content-Type", "application/json")
+            .header("OK-ACCESS-SIGN", sign.clone())
+            .body(body_json)
+            .build()?;
+
+        let response = self.client.execute(request).await?;
+        log::debug!("response: {response:?}");
+        let raw_response: RawResponse = response.json().await?;
+        dbg!(raw_response);
+
+        todo!()
     }
 }
 
 #[async_trait]
 pub trait ExchangeClient {
     async fn get_balance(&self) -> Result<f64>;
-    async fn withdraw(&self, current_balance: f64, address: String, ) -> Result<()>;
+    async fn withdraw(&self, current_balance: f64, address: String) -> Result<()>;
 }
 
 #[async_trait]
 impl ExchangeClient for OkCoinClient {
     async fn get_balance(&self) -> Result<f64> {
-        let client = Client::new();
+        let resp = self.request(BalanceRequest {}).await?;
 
-        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-        let message = format!("{timestamp}GET{}", Self::URL_BALANCE);
-        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &self.secret));
-
-        let request = client
-            .get(format!("{}{}", Self::URL_BASE, Self::URL_BALANCE))
-            .header("OK-ACCESS-KEY", &self.api_key)
-            .header("OK-ACCESS-PASSPHRASE", &self.passphrase)
-            .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
-            .header("Content-Type", "application/json")
-            .header("OK-ACCESS-SIGN", sign.clone())
-            .build()?;
-
-        let response = client.execute(request).await?;
-
-        let json = response.text().await?;
-        let balance_response: BalanseResponse = serde_json::from_str(&json)?;
-        log::info!("Balance response: {balance_response:#?}");
-
-        let current_balance = balance_response.data[0].current_balance.parse::<f64>()?;
-        log::info!("Current balance = {current_balance}");
-
-        Ok(current_balance)
+        todo!()
     }
 
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<()> {
-        let client = Client::new();
-
-        let timestamp = humantime::format_rfc3339_millis(std::time::SystemTime::now());
-
-        let body = json!({
-            "amt": current_balance,
-            "fee":"0.0005",
-            "dest":"3",
-            "ccy":"STX",
-            "chain":"STX-Bitcoin",
-            "toAddr": address
-        });
-
-        let message = format!("{timestamp}POST{}{body}", Self::URL_WITHDRAWAL);
-        let sign = general_purpose::STANDARD.encode(HMAC::mac(message, &self.secret));
-
-        let request = client
-            .post(format!("{}{}", Self::URL_BASE, Self::URL_WITHDRAWAL))
-            .header("accept", "application/json")
-            .header("CONTENT-TYPE", "application/json")
-            .header("OK-ACCESS-KEY", &self.api_key)
-            .header("OK-ACCESS-SIGN", sign)
-            .header("OK-ACCESS-TIMESTAMP", format!("{timestamp}"))
-            .header("OK-ACCESS-PASSPHRASE", &self.passphrase)
-            .body(body.to_string())
-            .build()?;
-
-        let response = client.execute(request).await?;
-
-        let json = response.text().await?;
-
-        log::info!("POST: {}", &json);
-
-        Ok(())
+        todo!()
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::time::Duration;
     use anyhow::anyhow;
+    use std::time::Duration;
 
     use crate::service::Service;
 
@@ -130,11 +118,7 @@ mod test {
             Ok(self.balance)
         }
         #[allow(unused)]
-        async fn withdraw(
-            &self,
-            current_balance: f64,
-            address: String,
-        ) -> Result<()> {
+        async fn withdraw(&self, current_balance: f64, address: String) -> Result<()> {
             if self.withdraw_success {
                 Ok(())
             } else {
@@ -149,7 +133,13 @@ mod test {
             balance: 100.1,
             withdraw_success: true,
         };
-        let service = Service::new(Duration::from_secs(3), 0.0, String::new(), String::new(), exchange_client);
+        let service = Service::new(
+            Duration::from_secs(3),
+            0.0,
+            String::new(),
+            String::new(),
+            exchange_client,
+        );
         service.run().await.expect("Success!");
         Ok(())
     } // FIX IT
@@ -160,8 +150,44 @@ mod test {
             balance: 100.0,
             withdraw_success: false,
         };
-        let service = Service::new(Duration::from_secs(3), 0.0, String::new(), String::new(), exchange_client);
+        let service = Service::new(
+            Duration::from_secs(3),
+            0.0,
+            String::new(),
+            String::new(),
+            exchange_client,
+        );
         service.run().await.expect_err("Withdraw failed!");
         Ok(())
     }
+}
+
+fn serde_from_str<'de, T, D, FE>(deserializer: D) -> Result<T, D::Error>
+where
+    D: serde::de::Deserializer<'de>,
+    T: std::str::FromStr<Err = FE>,
+    FE: std::fmt::Display,
+{
+    struct SerdeFromStr<T>(core::marker::PhantomData<T>);
+
+    impl<'de, T, FE> serde::de::Visitor<'de> for SerdeFromStr<T>
+    where
+        T: std::str::FromStr<Err = FE>,
+        FE: std::fmt::Display,
+    {
+        type Value = T;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("string or map")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<T, E>
+        where
+            E: serde::de::Error,
+        {
+            T::from_str(value).map_err(|e| E::custom(format!("{e}")))
+        }
+    }
+
+    deserializer.deserialize_any(SerdeFromStr(core::marker::PhantomData))
 }

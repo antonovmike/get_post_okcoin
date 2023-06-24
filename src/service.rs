@@ -2,7 +2,7 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 #[allow(unused)]
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 
 use crate::client::*;
 
@@ -16,7 +16,13 @@ pub struct Service<EC: ExchangeClient> {
 }
 
 impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
-    pub fn new(timeout: Duration, threshold: f64, address_1: String, address_2: String, exchange_client: EC) -> Self {
+    pub fn new(
+        timeout: Duration,
+        threshold: f64,
+        address_1: String,
+        address_2: String,
+        exchange_client: EC,
+    ) -> Self {
         log::info!("info");
         log::warn!("warning");
         log::error!("error");

@@ -1,9 +1,9 @@
 mod client;
 mod service;
 
-use std::{time::Duration, fs::File, io::Read};
+use std::{fs::File, io::Read, time::Duration};
 
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use serde::Deserialize;
 
@@ -12,7 +12,7 @@ use service::Service;
 
 #[derive(Debug, Deserialize)]
 struct Config {
-    #[serde(default="default_timeout", with="humantime_serde")]
+    #[serde(default = "default_timeout", with = "humantime_serde")]
     timeout: Duration,
     threshold: f64,
     address_1: String,
@@ -25,13 +25,16 @@ struct Config {
 impl Config {
     fn from_file(path: &str) -> Result<Self> {
         let mut toml = String::new();
-        File::open(path).map_err(|e| {
-            log::error!("Failed open config file \"{path}\": {e}");
-            anyhow!("Failed open config file \"{path}\": {e}")
-        })?.read_to_string(&mut toml).map_err(|e| {
-            log::error!("Failed to read config file \"{path}\": {e}");
-            anyhow!("Failed to read config file \"{path}\": {e}")
-        })?;
+        File::open(path)
+            .map_err(|e| {
+                log::error!("Failed open config file \"{path}\": {e}");
+                anyhow!("Failed open config file \"{path}\": {e}")
+            })?
+            .read_to_string(&mut toml)
+            .map_err(|e| {
+                log::error!("Failed to read config file \"{path}\": {e}");
+                anyhow!("Failed to read config file \"{path}\": {e}")
+            })?;
         toml::from_str(&toml).map_err(|e| {
             log::error!("config parse failed: {e}");
             anyhow!("config parse failed: {e}")
@@ -57,7 +60,11 @@ async fn main() -> Result<()> {
     let okcoin_client = OkCoinClient::new(config.api_key, config.passphrase, config.secret);
 
     let service = Service::new(
-        config.timeout, config.threshold, config.address_1, config.address_2, okcoin_client
+        config.timeout,
+        config.threshold,
+        config.address_1,
+        config.address_2,
+        okcoin_client,
     );
 
     service.run().await
