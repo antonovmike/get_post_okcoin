@@ -88,11 +88,12 @@ impl OkCoinClient {
             let http_code = response.status();
             let err_msg = match response.json::<RawResponse<R::Response>>().await {
                 Ok(rr) => format!(
-                    "HTTP error: HTTP status code: {}, exchange code: {}; message: {}", http_code, rr.code, rr.msg
+                    "HTTP error: HTTP status code: {}, exchange code: {}; message: {}",
+                    http_code, rr.code, rr.msg
                 ),
                 Err(_) => format!("HTTP status code {http_code}"),
             };
-            
+
             return Err(OkCoinClientError::RequestFailed(err_msg));
         }
 
@@ -109,7 +110,7 @@ impl OkCoinClient {
         raw_response
             .data
             .ok_or(OkCoinClientError::EmptyResponse)
-            .and_then(|x| todo!())?
+            .and_then(|x| x.into_iter().next().ok_or(OkCoinClientError::EmptyResponse))
     }
 }
 
