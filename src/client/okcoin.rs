@@ -84,7 +84,7 @@ struct WithdrawalResponse {
     #[serde[deserialize_with = "serde_from_str", rename = "totalEq"]]
     total_eq: f64,
     #[serde[deserialize_with = "serde_to_str"]]
-    amt: f64,
+    amt: String,
     wdId: String,
     ccy: String,
     clientId: String,
@@ -198,7 +198,13 @@ where
     deserializer.deserialize_any(SerdeFromStr(PhantomData))
 }
 
-fn serde_to_str<D>(deserializer: &D) {}
+fn serde_to_str<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(s)
+}
 
 #[async_trait]
 impl ExchangeClient for OkCoinClient {
