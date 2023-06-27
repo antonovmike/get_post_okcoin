@@ -78,16 +78,17 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
         let mut account_counter = 2;
 
         loop {
-            if self.exchange_client.get_balance().await? > self.threshold {
+            let current_balance = self.exchange_client.get_balance().await?;
+            if current_balance > self.threshold {
                 if account_counter == 2 {
                     self.exchange_client
-                        .withdraw(0.0, self.address_1.clone())
+                        .withdraw(current_balance, self.address_1.clone())
                         .await?;
                     log::trace!("test \t ADDRES 1");
                     account_counter = 1
                 } else {
                     self.exchange_client
-                        .withdraw(0.0, self.address_2.clone())
+                        .withdraw(current_balance, self.address_2.clone())
                         .await?;
                     log::trace!("test \t ADDRES 2");
                     account_counter = 2
