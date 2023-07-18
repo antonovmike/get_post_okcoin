@@ -16,9 +16,6 @@ pub struct Service<EC: ExchangeClient> {
 
 impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
     pub fn new(timeout: Duration, threshold: f64, address_1: String, address_2: String, exchange_client: EC) -> Self {
-        log::info!("info");
-        log::warn!("warning");
-        log::error!("error");
         Self {
             timeout,
             threshold,
