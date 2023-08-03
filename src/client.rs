@@ -7,8 +7,6 @@ use anyhow::Result;
 
 #[derive(Debug, serde::Deserialize)]
 struct BalanseResponseData {
-    // #[serde(rename = "totalEq")]
-    // current_balance: String,
     bal: String,
 }
 
@@ -26,9 +24,7 @@ pub struct OkCoinClient {
 
 impl OkCoinClient {
     const URL_BASE: &str = "https://www.okcoin.com";
-    // const URL_BALANCE: &str = "/api/v5/account/balance?ccy=STX";
     const URL_BALANCE: &str = "/api/v5/asset/balances";
-    // const URL_BALANCE: &str = "/api/v5/asset/currencies";
     const URL_WITHDRAWAL: &str = "/api/v5/asset/withdrawal";
 
     pub fn new(api_key: String, passphrase: String, secret: String) -> Self {
@@ -74,7 +70,6 @@ impl ExchangeClient for OkCoinClient {
         let balance_response: BalanseResponse = serde_json::from_str(&json)?;
         log::info!("Balance response: {balance_response:#?}");
 
-        // let current_balance = balance_response.data[0].current_balance.parse::<f64>()?;
         let current_balance = balance_response.data[0].bal.parse::<f64>()?;
         log::info!("Current balance = {current_balance}");
 
