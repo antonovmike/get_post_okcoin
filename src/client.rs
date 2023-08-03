@@ -60,12 +60,9 @@ impl ExchangeClient for OkCoinClient {
             .header("OK-ACCESS-SIGN", sign.clone())
             .build()?;
 
-        dbg!(&request);
-
         let response = client.execute(request).await?;
 
         let json = response.text().await?;
-        dbg!(&json);
 
         let balance_response: BalanseResponse = serde_json::from_str(&json)?;
         log::info!("Balance response: {balance_response:#?}");
