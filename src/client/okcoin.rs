@@ -9,7 +9,7 @@ use base64::engine::{general_purpose, Engine};
 use hmac_sha256::HMAC;
 use reqwest::Client;
 use reqwest::Method;
-use reqwest::StatusCode;
+// use reqwest::StatusCode;
 use serde::{
     de::{DeserializeOwned, Deserializer, Visitor},
     Deserialize, Serialize,
@@ -17,6 +17,20 @@ use serde::{
 use thiserror::Error;
 
 use super::ExchangeClient;
+
+#[derive(Debug, Error)]
+pub enum OkCoinClientError {
+    #[error("(de)serializing from/to json failed {0}")]
+    JsonError(#[from] serde_json::Error),
+    #[error("reqwest error {0}")]
+    ReqwestError(#[from] reqwest::Error),
+    #[error("{0}")]
+    RequestFailed(String),
+    #[error("OkCoin API request finished with error: code {0}, message: \"{1}\"")]
+    ApiRequest(u16, String),
+    #[error("API request succeed but response is empty")]
+    EmptyResponse,
+}
 
 trait Request: Serialize {
     const URL_PATH: &'static str;
@@ -26,7 +40,7 @@ trait Request: Serialize {
 
 #[derive(Debug, Serialize)]
 struct BalanceRequest {}
-
+#[allow(unused)]
 #[derive(Debug, Deserialize)]
 struct BalanceResponse {
     #[serde[deserialize_with = "serde_from_str", rename = "uTime"]]
@@ -35,7 +49,7 @@ struct BalanceResponse {
     total_eq: f64,
     details: Vec<BalanceDetailedInfo>,
 }
-
+#[allow(unused)]
 #[derive(Debug, Deserialize)]
 struct BalanceDetailedInfo {
     #[serde[rename = "ccy"]]
@@ -77,7 +91,7 @@ impl Request for WithdrawalRequest {
     const HTTP_METHOD: Method = Method::POST;
     type Response = WithdrawalResponse;
 }
-
+#[allow(unused)]
 #[derive(Debug, Deserialize)]
 struct WithdrawalResponse {
     #[serde[deserialize_with = "serde_from_str", rename = "uTime"]]
@@ -103,7 +117,7 @@ pub struct OkCoinClient {
 }
 
 impl OkCoinClient {
-    const URL_BASE: &str = "";
+    // const URL_BASE: &str = "";
     pub fn new(api_key: String, passphrase: String, secret: String) -> Self {
         Self {
             api_key,
@@ -228,22 +242,8 @@ impl ExchangeClient for OkCoinClient {
     }
 
     async fn withdraw(&self, current_balance: f64, address: String) -> Result<(), Self::Err> {
-        let reqw = self.request(WithdrawalRequest {amount: current_balance, address: address}).await?;
+        let _reqw = self.request(WithdrawalRequest {amount: current_balance, address: address}).await?;
 
         todo!()
     }
-}
-
-#[derive(Debug, Error)]
-pub enum OkCoinClientError {
-    #[error("(de)serializing from/to json failed {0}")]
-    JsonError(#[from] serde_json::Error),
-    #[error("reqwest error {0}")]
-    ReqwestError(#[from] reqwest::Error),
-    #[error("{0}")]
-    RequestFailed(String),
-    #[error("OkCoin API request finished with error: code {0}, message: \"{1}\"")]
-    ApiRequest(u16, String),
-    #[error("API request succeed but response is empty")]
-    EmptyResponse,
 }

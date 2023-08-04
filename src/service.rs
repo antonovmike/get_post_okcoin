@@ -36,31 +36,31 @@ impl<EC: ExchangeClient + std::marker::Sync> Service<EC> {
     }
 
     pub async fn run(&self) -> Result<()> {
-        // let mut account_counter = 2;
+        let mut account_counter = 2;
 
-        // loop {
-        //     if self.exchange_client.get_balance().await? > self.threshold {
-        //         if account_counter == 2 {
-        //             self.exchange_client
-        //                 .withdraw(0.0, self.address_1.clone())
-        //                 .await?;
-        //             log::trace!("test \t ADDRES 1");
-        //             account_counter = 1
-        //         } else {
-        //             self.exchange_client
-        //                 .withdraw(0.0, self.address_2.clone())
-        //                 .await?;
-        //             log::trace!("test \t ADDRES 2");
-        //             account_counter = 2
-        //         }
-        //     }
+        loop {
+            if self.exchange_client.get_balance().await? > self.threshold {
+                if account_counter == 2 {
+                    self.exchange_client
+                        .withdraw(0.0, self.address_1.clone())
+                        .await?;
+                    log::trace!("test \t ADDRES 1");
+                    account_counter = 1
+                } else {
+                    self.exchange_client
+                        .withdraw(0.0, self.address_2.clone())
+                        .await?;
+                    log::trace!("test \t ADDRES 2");
+                    account_counter = 2
+                }
+            }
 
-        //     sleep(Duration::from_secs(3)).await;
-        // }
-        // #[allow(unused)]
-        // Ok(())
-        self.exchange_client.get_balance().await?;
+            sleep(Duration::from_secs(3)).await;
+        }
+        #[allow(unused)]
         Ok(())
+        // self.exchange_client.get_balance().await?;
+        // Ok(())
     }
 }
 
