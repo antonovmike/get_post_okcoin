@@ -1,3 +1,9 @@
+use std::{
+    fmt::{Debug, Display, Formatter, Result as FmtResult},
+    marker::PhantomData,
+    str::FromStr,
+};
+
 use async_trait::async_trait;
 use base64::engine::{general_purpose, Engine};
 use hmac_sha256::HMAC;
@@ -7,11 +13,6 @@ use reqwest::StatusCode;
 use serde::{
     de::{DeserializeOwned, Deserializer, Visitor},
     Deserialize, Serialize,
-};
-use std::{
-    fmt::{Debug, Display, Formatter, Result as FmtResult},
-    marker::PhantomData,
-    str::FromStr,
 };
 use thiserror::Error;
 
@@ -60,7 +61,7 @@ struct BalanceDetailedInfo {
 }
 
 impl Request for BalanceRequest {
-    const URL_PATH: &'static str = "account/balance";
+    const URL_PATH: &'static str = "asset/balance";
     const HTTP_METHOD: Method = Method::GET;
     type Response = BalanceResponse;
 }
@@ -85,9 +86,11 @@ struct WithdrawalResponse {
     total_eq: f64,
     #[serde[deserialize_with = "serde_to_str"]]
     amt: String,
-    wdId: String,
+    #[serde[deserialize_with = "serde_from_str", rename = "wdId"]]
+    wd_id: String,
     ccy: String,
-    clientId: String,
+    #[serde[deserialize_with = "serde_from_str", rename = "clientId"]]
+    client_id: String,
     chain: String, // "STX-Bitcoin"
 }
 
