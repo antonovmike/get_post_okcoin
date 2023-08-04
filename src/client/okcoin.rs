@@ -75,7 +75,7 @@ struct BalanceDetailedInfo {
 }
 
 impl Request for BalanceRequest {
-    const URL_PATH: &'static str = "asset/balance";
+    const URL_PATH: &'static str = "asset/balances";
     const HTTP_METHOD: Method = Method::GET;
     type Response = BalanceResponse;
 }
@@ -151,6 +151,8 @@ impl OkCoinClient {
             .header("OK-ACCESS-SIGN", sign.clone())
             .body(body_json)
             .build()?;
+
+        dbg!(&request);
 
         let response = self.client.execute(request).await?;
         log::debug!("response: {response:?}");
