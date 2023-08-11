@@ -117,7 +117,6 @@ pub struct OkCoinClient {
 }
 
 impl OkCoinClient {
-    // const URL_BASE: &str = "";
     pub fn new(api_key: String, passphrase: String, secret: String) -> Self {
         Self {
             api_key,
@@ -238,7 +237,7 @@ impl ExchangeClient for OkCoinClient {
             .iter()
             .find(|d| d.currency == "STX")
             .map(|bdi| bdi.eq)
-            .unwrap_or_default(); // or "STX-..."?
+            .unwrap_or_default();
 
         Ok(balance)
     }
