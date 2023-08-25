@@ -26,6 +26,8 @@ impl OkCoinClient {
     const URL_BASE: &str = "https://www.okcoin.com";
     const URL_BALANCE: &str = "/api/v5/asset/balances";
     const URL_WITHDRAWAL: &str = "/api/v5/asset/withdrawal";
+    // GET /api/v5/asset/deposit-address
+    const URL_MEMO: &str = "/api/v5/asset/deposit-address";
 
     pub fn new(api_key: String, passphrase: String, secret: String) -> Self {
         Self {
