@@ -81,7 +81,7 @@ impl ExchangeClient for OkCoinClient {
         let body = json!({
             "amt": current_balance,
             "fee":"0.0005",
-            "dest":"3",
+            "dest":"4",
             "ccy":"STX",
             "chain":"STX-STX",
             "toAddr": address
